@@ -1,0 +1,9 @@
+# HIDra — non-root access to the supported HID config interfaces (systemd-logind uaccess).
+# Copie para /etc/udev/rules.d/ e recarregue as regras; depois reconecte os aparelhos.
+
+# Mouse Cobra Pro / M711-PRO — receptor 2.4G (FA07) e USB-C / cabo (FA08)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="25a7", ATTRS{idProduct}=="fa07", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="25a7", ATTRS{idProduct}=="fa08", MODE="0660", TAG+="uaccess"
+
+# Teclado Brahma Pro / K586RGB-PRO — SONiX SN32F248B
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="5004", MODE="0660", TAG+="uaccess"

@@ -1,0 +1,104 @@
+// Shared domain types for the HIDra frontend.
+// Mirrors the Tauri command payloads described in PROTOCOL.md.
+
+export type DeviceKind = "mouse" | "keyboard";
+
+export type Profile = 1 | 2 | 3;
+
+export type MouseMode = "2.4g" | "wired";
+
+export interface ListDevices {
+  keyboard: boolean;
+  mouse: boolean;
+  mouse_mode: MouseMode | null;
+  /** Vendor + model of what was found, from the backend device table. */
+  keyboard_model: string | null;
+  mouse_model: string | null;
+  /** Set when the model was added to the table but never proven on hardware. */
+  keyboard_untested: boolean;
+  mouse_untested: boolean;
+}
+
+export type LedEffect = "steady" | "breathing" | "cycle" | "off";
+
+export interface MouseLed {
+  effect: LedEffect;
+  r: number;
+  g: number;
+  b: number;
+  speed: number;
+  brightness: number;
+}
+
+export type Rgb = [number, number, number];
+
+export interface DpiStage {
+  x: number;
+  y: number;
+  color: Rgb;
+  enabled: boolean;
+}
+
+/** Raw button table entry: [TYPE, P1, P2] */
+export type ButtonRaw = [number, number, number];
+
+export interface MouseState {
+  present: boolean;
+  mode: MouseMode | null;
+  led: MouseLed | null;
+  dpi: DpiStage[] | null;
+  dpi_effect: boolean | null;
+  polling: number | null;
+  buttons: ButtonRaw[] | null;
+}
+
+export type MouseButton = "left" | "right" | "middle" | "back" | "forward";
+export type DpiOp = "up" | "down" | "cycle";
+
+/** Discriminated union of every button action the mouse understands. */
+export type ButtonAction =
+  | { type: "disabled" }
+  | { type: "mouse"; button: MouseButton }
+  | { type: "dpi"; op: DpiOp }
+  | { type: "fire"; speed: number; clicks: number }
+  | { type: "three_click" }
+  | { type: "rgb_toggle" }
+  | { type: "polling_switch" }
+  | { type: "media"; usage: number }
+  | { type: "key"; usage: number }
+  | { type: "combo"; modifiers: number; usage: number };
+
+export type ButtonActionType = ButtonAction["type"];
+
+export interface KeyboardState {
+  present: boolean;
+  active: number | null;
+  effect: number | null;
+  brightness: number | null;
+  speed: number | null;
+  direction: number | null;
+  full_rgb: boolean | null;
+  color: Rgb | null;
+}
+
+export interface KeyboardEffect {
+  id: number;
+  name: string;
+  has_color: boolean;
+  has_direction: boolean;
+}
+
+export interface RemapKey {
+  index: number;
+  label: string;
+  raw: ButtonRaw;
+}
+
+export type RemapKind = "key" | "modifier" | "media" | "disable";
+
+export interface CustomCell {
+  off: number;
+  r: number;
+  g: number;
+  b: number;
+}

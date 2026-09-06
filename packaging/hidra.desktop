@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=HIDra
+GenericName=Peripheral configurator
+Comment=Configure RGB lighting, DPI and key remapping on gaming mice and keyboards
+Exec=hidra
+Icon=hidra
+Terminal=false
+Categories=Utility;Settings;HardwareSettings;
+Keywords=mouse;keyboard;teclado;rgb;dpi;hid;redragon;macro;

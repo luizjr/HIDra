@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1d24"/>
+      <stop offset="1" stop-color="#0b0c10"/>
+    </linearGradient>
+    <linearGradient id="scale" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#ff6152"/>
+      <stop offset="0.5" stop-color="#e01f26"/>
+      <stop offset="1" stop-color="#8e0f18"/>
+    </linearGradient>
+    <!-- one head, drawn pointing up; reused for all three necks -->
+    <g id="head">
+      <path d="M0 -104 L52 36 Q0 76 -52 36 Z" fill="url(#scale)"/>
+      <circle cx="0" cy="-24" r="17" fill="#0b0c10"/>
+    </g>
+  </defs>
+
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <rect x="8" y="8" width="1008" height="1008" rx="218" fill="none"
+        stroke="#ffffff" stroke-opacity="0.06" stroke-width="16"/>
+
+  <!-- three necks out of one body: one app, many devices -->
+  <g fill="none" stroke="url(#scale)" stroke-linecap="round">
+    <path d="M512 872 C 470 780 300 760 262 610" stroke-width="66"/>
+    <path d="M512 872 C 552 780 724 760 762 610" stroke-width="66"/>
+    <path d="M512 872 C 512 760 470 640 512 476" stroke-width="78"/>
+  </g>
+
+  <use href="#head" transform="translate(248 556) rotate(-18)"/>
+  <use href="#head" transform="translate(776 556) rotate(18)"/>
+  <use href="#head" transform="translate(512 420)"/>
+</svg>

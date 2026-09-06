@@ -1,0 +1,90 @@
+name: Release
+
+# Tag a commit to publish installers:
+#   npm version 0.1.0 --no-git-tag-version   # keep package.json/tauri.conf in sync
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# The release is created as a DRAFT: check the artifacts, write the notes, then
+# publish it from the GitHub UI.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build and attach the installers to (e.g. v0.1.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: Linux (deb, rpm, AppImage)
+            args: ""
+          - os: windows-latest
+            label: Windows (exe, msi)
+            args: ""
+          - os: macos-latest
+            label: macOS (dmg, universal)
+            args: "--target universal-apple-darwin"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libudev-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # The universal macOS bundle links both slices, so both targets are needed.
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: HIDra ${{ github.event.inputs.tag || github.ref_name }}
+          releaseDraft: true
+          prerelease: false
+          releaseBody: |
+            Installers for Linux, Windows and macOS are attached below.
+
+            **Linux** — the `.deb` and `.rpm` install the udev rule for you, so
+            just replug the device afterwards. AppImage users need the rule
+            once: `sudo sh packaging/install-udev.sh` from a source checkout.
+
+            **Windows** — the installer is unsigned: SmartScreen will ask, choose
+            *More info → Run anyway*.
+
+            **macOS** — the app is not notarized: first launch needs
+            *right-click → Open*, or
+            `xattr -dr com.apple.quarantine /Applications/HIDra.app`.
+
+            See the [changelog](https://github.com/luizjr/HIDra/blob/main/CHANGELOG.md)
+            for what changed.
+          args: ${{ matrix.args }}

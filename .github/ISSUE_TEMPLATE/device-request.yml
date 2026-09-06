@@ -1,0 +1,58 @@
+name: Device request
+description: Ask for support for a mouse or keyboard HIDra does not know yet
+title: "[device] "
+labels: ["device"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Most devices are rebadged siblings of one we already support, in
+        which case adding yours is a single line — see
+        [docs/ADDING-DEVICES.md](../blob/main/docs/ADDING-DEVICES.md) if you want
+        to send the pull request yourself.
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Brand, marketing name and model code as printed on the box or the underside
+      placeholder: Redragon Cobra Pro (M711-PRO)
+    validations:
+      required: true
+  - type: input
+    id: usbid
+    attributes:
+      label: USB id
+      description: "Linux: `lsusb`. Windows: Device Manager → Details → Hardware Ids. macOS: System Information → USB."
+      placeholder: "25a7:fa08"
+    validations:
+      required: true
+  - type: textarea
+    id: descriptor
+    attributes:
+      label: Report descriptor (Linux, optional but very helpful)
+      description: |
+        Run this and paste the output — it shows where the configuration
+        endpoint lives, which is the hard part.
+      value: |
+        <details><summary>report descriptors</summary>
+
+        ```
+        # paste the output of:
+        # for n in /sys/class/hidraw/hidraw*; do echo "== $n"; grep HID_ $n/device/uevent; \
+        #   xxd $n/device/report_descriptor | head -20; done
+        ```
+
+        </details>
+      render: markdown
+  - type: input
+    id: tool
+    attributes:
+      label: Vendor tool
+      description: Name (and link, if you have it) of the official software for this device
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help test?
+      options:
+        - label: I own this device and can test a build against it
+        - label: I can capture the vendor tool's USB traffic

@@ -1,0 +1,116 @@
+import type { DeviceKind, ListDevices, Profile } from "../types";
+import { SegmentedControl } from "./ui/SegmentedControl";
+
+interface SidebarProps {
+  devices: ListDevices;
+  selected: DeviceKind;
+  onSelect: (kind: DeviceKind) => void;
+  profile: Profile;
+  onProfile: (profile: Profile) => void;
+}
+
+interface DeviceMeta {
+  kind: DeviceKind;
+  name: string;
+  model: string;
+  connected: boolean;
+  untested: boolean;
+  mode?: string;
+}
+
+export function Sidebar({
+  devices,
+  selected,
+  onSelect,
+  profile,
+  onProfile,
+}: SidebarProps) {
+  const items: DeviceMeta[] = [
+    {
+      kind: "mouse",
+      name: "Mouse",
+      model: devices.mouse_model ?? "Nenhum compatível",
+      connected: devices.mouse,
+      untested: devices.mouse_untested,
+      mode:
+        devices.mouse_mode === "2.4g"
+          ? "2.4G"
+          : devices.mouse_mode === "wired"
+            ? "Cabo"
+            : undefined,
+    },
+    {
+      kind: "keyboard",
+      name: "Teclado",
+      model: devices.keyboard_model ?? "Nenhum compatível",
+      connected: devices.keyboard,
+      untested: devices.keyboard_untested,
+    },
+  ];
+
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <span className="brand__logo" aria-hidden="true" />
+        <div className="brand__text">
+          <strong>HIDra</strong>
+          <span>CONFIG</span>
+        </div>
+      </div>
+
+      <nav className="devicelist">
+        {items.map((item) => (
+          <div key={item.kind} className="devicelist__group">
+            <button
+              type="button"
+              className={`device${item.kind === selected ? " is-active" : ""}`}
+              onClick={() => onSelect(item.kind)}
+            >
+              <span
+                className={`device__dot${item.connected ? " is-on" : ""}`}
+                title={item.connected ? "Conectado" : "Ausente"}
+              />
+              <span className="device__info">
+                <span className="device__name">{item.name}</span>
+                <span className="device__model">{item.model}</span>
+              </span>
+              {item.untested && item.connected && (
+                <span
+                  className="device__mode device__mode--warn"
+                  title="Modelo adicionado pela comunidade e ainda não testado em hardware"
+                >
+                  ?
+                </span>
+              )}
+              {item.mode && item.connected && (
+                <span className="device__mode">{item.mode}</span>
+              )}
+            </button>
+
+            {item.kind === "keyboard" && selected === "keyboard" && (
+              <div className="profilepick">
+                <span className="profilepick__label">Perfil</span>
+                <SegmentedControl<Profile>
+                  size="sm"
+                  value={profile}
+                  onChange={onProfile}
+                  options={[
+                    { value: 1, label: "1" },
+                    { value: 2, label: "2" },
+                    { value: 3, label: "3" },
+                  ]}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </nav>
+
+      <div className="sidebar__foot">
+        <span className="sidebar__hint">
+          Configuração local via 2.4G / cabo
+        </span>
+      </div>
+    </aside>
+  );
+}

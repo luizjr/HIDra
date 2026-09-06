@@ -1,0 +1,219 @@
+// HIDra — open-source configurator for HID gaming peripherals.
+// Copyright (C) 2026 HIDra contributors.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+mod devices;
+mod error;
+mod hid;
+mod keyboard;
+mod mouse;
+
+use error::Result;
+use hidapi::HidApi;
+use parking_lot::Mutex;
+use serde::Serialize;
+use tauri::State;
+
+/// Shared HID context. Re-enumerated before every operation so hot-plug and the
+/// wireless mouse waking up are picked up without restarting the app.
+pub struct App {
+    api: Mutex<HidApi>,
+}
+
+fn with_api<T>(app: &App, f: impl FnOnce(&HidApi) -> T) -> T {
+    let mut guard = app.api.lock();
+    let _ = guard.refresh_devices();
+    f(&guard)
+}
+
+#[derive(Serialize)]
+struct Presence {
+    keyboard: bool,
+    mouse: bool,
+    mouse_mode: Option<String>,
+    /// Model names of what was actually found, straight from the device table,
+    /// so the UI names the hardware instead of hardcoding one model.
+    keyboard_model: Option<String>,
+    mouse_model: Option<String>,
+    /// True when the model was added to the table from a capture but never
+    /// confirmed on hardware — the UI warns about it.
+    keyboard_untested: bool,
+    mouse_untested: bool,
+}
+
+#[tauri::command]
+fn list_devices(app: State<App>) -> Presence {
+    with_api(&app, |api| {
+        let kb = hid::find(api, hid::Kind::Keyboard);
+        let m = hid::find(api, hid::Kind::Mouse);
+        Presence {
+            keyboard: kb.is_some(),
+            mouse: m.is_some(),
+            mouse_mode: m.as_ref().map(|f| f.connection().to_string()),
+            keyboard_untested: kb.as_ref().is_some_and(|f| f.untested()),
+            mouse_untested: m.as_ref().is_some_and(|f| f.untested()),
+            keyboard_model: kb.map(|f| f.full_name()),
+            mouse_model: m.map(|f| f.full_name()),
+        }
+    })
+}
+
+// ---- Mouse commands ----------------------------------------------------
+
+#[tauri::command]
+fn mouse_read_state(app: State<App>) -> mouse::MouseState {
+    with_api(&app, |api| mouse::read_state(api))
+}
+
+#[tauri::command]
+fn mouse_set_led(app: State<App>, effect: String, r: u8, g: u8, b: u8, speed: u8, brightness: u8) -> Result<()> {
+    with_api(&app, |api| mouse::set_led(api, &effect, r, g, b, speed, brightness))
+}
+
+#[tauri::command]
+fn mouse_set_dpi_stage(app: State<App>, stage: usize, x: u32, y: u32) -> Result<()> {
+    with_api(&app, |api| mouse::set_dpi_stage(api, stage, x, y))
+}
+
+#[tauri::command]
+fn mouse_set_dpi_all(app: State<App>, dpi: u32) -> Result<()> {
+    with_api(&app, |api| mouse::set_dpi_all(api, dpi))
+}
+
+#[tauri::command]
+fn mouse_set_dpi_color(app: State<App>, stage: usize, r: u8, g: u8, b: u8) -> Result<()> {
+    with_api(&app, |api| mouse::set_dpi_color(api, stage, r, g, b))
+}
+
+#[tauri::command]
+fn mouse_set_dpi_effect(app: State<App>, on: bool) -> Result<()> {
+    with_api(&app, |api| mouse::set_dpi_effect(api, on))
+}
+
+#[tauri::command]
+fn mouse_set_polling(app: State<App>, hz: u32) -> Result<()> {
+    with_api(&app, |api| mouse::set_polling(api, hz))
+}
+
+#[tauri::command]
+fn mouse_set_button(app: State<App>, index: usize, action: mouse::Action) -> Result<()> {
+    with_api(&app, |api| mouse::set_button(api, index, action))
+}
+
+// ---- Keyboard commands -------------------------------------------------
+
+#[tauri::command]
+fn keyboard_read_state(app: State<App>, profile: u8) -> keyboard::KbState {
+    with_api(&app, |api| keyboard::read_state(api, profile))
+}
+
+#[tauri::command]
+fn keyboard_effects() -> Vec<keyboard::Effect> {
+    keyboard::effects()
+}
+
+// The JS side sends snake_case keys (e.g. `full_rgb`); tell Tauri to expect
+// them as-is instead of the default camelCase conversion.
+#[tauri::command(rename_all = "snake_case")]
+#[allow(clippy::too_many_arguments)]
+fn keyboard_set_effect(
+    app: State<App>,
+    profile: u8,
+    effect: u8,
+    r: u8,
+    g: u8,
+    b: u8,
+    brightness: u8,
+    speed: u8,
+    direction: u8,
+    full_rgb: bool,
+) -> Result<()> {
+    with_api(&app, |api| {
+        keyboard::set_effect(api, profile, effect, r, g, b, brightness, speed, direction, full_rgb)
+    })
+}
+
+#[tauri::command]
+fn keyboard_set_brightness(app: State<App>, profile: u8, value: u8) -> Result<()> {
+    with_api(&app, |api| keyboard::set_brightness(api, profile, value))
+}
+#[tauri::command]
+fn keyboard_set_speed(app: State<App>, profile: u8, value: u8) -> Result<()> {
+    with_api(&app, |api| keyboard::set_speed(api, profile, value))
+}
+#[tauri::command]
+fn keyboard_set_direction(app: State<App>, profile: u8, left: bool) -> Result<()> {
+    with_api(&app, |api| keyboard::set_direction(api, profile, left))
+}
+#[tauri::command]
+fn keyboard_set_full_rgb(app: State<App>, profile: u8, on: bool) -> Result<()> {
+    with_api(&app, |api| keyboard::set_full_rgb(api, profile, on))
+}
+#[tauri::command]
+fn keyboard_set_color(app: State<App>, profile: u8, r: u8, g: u8, b: u8) -> Result<()> {
+    with_api(&app, |api| keyboard::set_color(api, profile, r, g, b))
+}
+#[tauri::command]
+fn keyboard_set_mode(app: State<App>, profile: u8, effect: u8) -> Result<()> {
+    with_api(&app, |api| keyboard::set_mode(api, profile, effect))
+}
+#[tauri::command]
+fn keyboard_set_active_profile(app: State<App>, profile: u8) -> Result<()> {
+    with_api(&app, |api| keyboard::set_active_profile(api, profile))
+}
+
+#[tauri::command]
+fn keyboard_remap_keys() -> Vec<keyboard::RemapKey> {
+    keyboard::remap_keys()
+}
+
+#[tauri::command]
+fn keyboard_remap(app: State<App>, index: usize, kind: String, code: u8, code2: u8) -> Result<()> {
+    let opt = keyboard::encode_remap(&kind, code, code2);
+    with_api(&app, |api| keyboard::remap(api, index, opt))
+}
+
+#[tauri::command]
+fn keyboard_restore_keymap(app: State<App>) -> Result<()> {
+    with_api(&app, |api| keyboard::restore_keymap(api))
+}
+
+#[tauri::command]
+fn keyboard_set_custom_colors(app: State<App>, profile: u8, cells: Vec<keyboard::CustomCell>) -> Result<()> {
+    with_api(&app, |api| keyboard::set_custom_colors(api, profile, cells))
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let api = HidApi::new().expect("falha ao inicializar HIDAPI");
+    tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::default().level(log::LevelFilter::Info).build())
+        .manage(App { api: Mutex::new(api) })
+        .invoke_handler(tauri::generate_handler![
+            list_devices,
+            mouse_read_state,
+            mouse_set_led,
+            mouse_set_dpi_stage,
+            mouse_set_dpi_all,
+            mouse_set_dpi_color,
+            mouse_set_dpi_effect,
+            mouse_set_polling,
+            mouse_set_button,
+            keyboard_read_state,
+            keyboard_effects,
+            keyboard_set_effect,
+            keyboard_set_brightness,
+            keyboard_set_speed,
+            keyboard_set_direction,
+            keyboard_set_full_rgb,
+            keyboard_set_color,
+            keyboard_set_mode,
+            keyboard_set_active_profile,
+            keyboard_remap_keys,
+            keyboard_remap,
+            keyboard_restore_keymap,
+            keyboard_set_custom_colors,
+        ])
+        .run(tauri::generate_context!())
+        .expect("erro ao executar a aplicação Tauri");
+}

@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not work
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: Redragon Brahma Pro (K586RGB-PRO), 0c45:5004
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - Windows
+        - macOS
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HIDra version
+      placeholder: 0.1.0 (or a commit hash if you built from source)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output
+      description: "Run from a terminal (`hidra` on Linux) and paste anything it printed."
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: "Linux: I installed the udev rule (`sudo sh packaging/install-udev.sh`) and replugged the device"
+        - label: "Wireless mouse: I moved the mouse while applying the setting"

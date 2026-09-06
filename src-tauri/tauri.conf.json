@@ -1,0 +1,63 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "HIDra",
+  "version": "0.1.0",
+  "identifier": "io.github.luizjr.hidra",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "HIDra",
+        "width": 1180,
+        "height": 760,
+        "minWidth": 1024,
+        "minHeight": 680,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    },
+    "category": "Utility",
+    "shortDescription": "Configure gaming mice and keyboards",
+    "longDescription": "HIDra configures RGB lighting, DPI, polling rate and key/button remapping on supported gaming mice and keyboards, talking to them directly over raw HID with no vendor software.",
+    "copyright": "Copyright (c) 2026 HIDra contributors",
+    "licenseFile": "../LICENSE",
+    "linux": {
+      "deb": {
+        "depends": [],
+        "files": {
+          "/usr/lib/udev/rules.d/70-hidra.rules": "../packaging/70-hidra.rules"
+        },
+        "postInstallScript": "../packaging/deb-postinst.sh"
+      },
+      "rpm": {
+        "depends": [],
+        "files": {
+          "/usr/lib/udev/rules.d/70-hidra.rules": "../packaging/70-hidra.rules"
+        },
+        "postInstallScript": "../packaging/deb-postinst.sh"
+      }
+    }
+  }
+}
