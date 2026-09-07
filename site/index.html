@@ -147,6 +147,8 @@
 
   /* ---- features ---- */
   .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  /* Two per row, so four questions read as a block instead of 3 + 1. */
+  .cards--faq { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
   .card ul { margin: 0; padding-left: 18px; }
   .card li { margin-bottom: 6px; }
@@ -405,7 +407,7 @@
   <section id="compat">
     <div class="wrap">
       <h2><span data-en>Redragon software for Linux and macOS</span><span data-pt>Programa da Redragon no Linux e no macOS</span></h2>
-      <div class="cards">
+      <div class="cards cards--faq">
         <div class="card">
           <h3><span data-en>Is there official Redragon software for Linux?</span><span data-pt>Existe programa oficial da Redragon para Linux?</span></h3>
           <p>
