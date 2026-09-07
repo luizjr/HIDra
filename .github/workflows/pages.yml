@@ -1,0 +1,51 @@
+name: Pages
+
+# Publishes the landing page at https://luizjr.github.io/HIDra/ on every change
+# to the site, the screenshots or the app icon. The page reads the installer
+# list from the GitHub releases API at load time, so a new release needs no
+# deploy here.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "docs/screenshots/**"
+      - "app-icon.svg"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The screenshots and the icon live where the app and the README use
+      # them; the site gets copies rather than duplicates in git.
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/img
+          cp -r site/. _site/
+          cp docs/screenshots/*.png _site/img/
+          cp app-icon.svg _site/icon.svg
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

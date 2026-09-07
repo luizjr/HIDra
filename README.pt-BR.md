@@ -5,7 +5,10 @@
   direto com o hardware por HID, sem depender do programa do fabricante.
 </p>
 
-<p align="center"><a href="README.md">Read in English 🇬🇧</a></p>
+<p align="center">
+  <b><a href="https://luizjr.github.io/HIDra/">luizjr.github.io/HIDra</a></b> ·
+  <a href="README.md">Read in English 🇬🇧</a>
+</p>
 
 ---
 

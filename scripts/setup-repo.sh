@@ -21,7 +21,7 @@ DESCRIPTION="Open-source configurator for gaming mice and keyboards on Linux, Wi
 echo "Setting description, homepage and features on $REPO…"
 gh repo edit "$REPO" \
     --description "$DESCRIPTION" \
-    --homepage "https://github.com/$REPO/releases/latest" \
+    --homepage "https://luizjr.github.io/HIDra/" \
     --enable-issues \
     --enable-discussions \
     --enable-wiki=false \

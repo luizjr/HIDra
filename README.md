@@ -12,7 +12,10 @@
   <a href="https://github.com/luizjr/HIDra/releases/tag/nightly"><img alt="Nightly build" src="https://github.com/luizjr/HIDra/actions/workflows/nightly.yml/badge.svg"></a>
 </p>
 
-<p align="center"><a href="README.pt-BR.md">Leia em português 🇧🇷</a></p>
+<p align="center">
+  <b><a href="https://luizjr.github.io/HIDra/">luizjr.github.io/HIDra</a></b> ·
+  <a href="README.pt-BR.md">Leia em português 🇧🇷</a>
+</p>
 
 ---
 

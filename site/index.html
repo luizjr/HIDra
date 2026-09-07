@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HIDra — configure gaming mice and keyboards on any OS</title>
+<meta name="description" content="Open-source configurator for gaming mice and keyboards on Linux, Windows and macOS. RGB lighting, DPI, polling rate and key remapping over raw HID, with no vendor software.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta property="og:title" content="HIDra">
+<meta property="og:description" content="Configure gaming mice and keyboards on Linux, Windows and macOS — no vendor software.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://luizjr.github.io/HIDra/">
+<meta property="og:image" content="https://luizjr.github.io/HIDra/img/mouse.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --bg: #0b0c10;
+    --bg-soft: #121319;
+    --panel: #15161c;
+    --border: #24262e;
+    --border-strong: #33363f;
+    --text: #d8dae2;
+    --text-strong: #f2f3f7;
+    --muted: #8d92a1;
+    --accent: #d81f26;
+    --accent-hover: #f4404a;
+    --accent-soft: rgba(216, 31, 38, 0.14);
+    --radius: 12px;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 520px at 50% -180px, rgba(216, 31, 38, 0.16), transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-hover); }
+  h1, h2, h3 { color: var(--text-strong); line-height: 1.2; margin: 0 0 12px; }
+  h2 { font-size: clamp(24px, 3vw, 30px); }
+  p { margin: 0 0 14px; }
+  code, kbd { font-family: var(--mono); font-size: 0.88em; }
+  code {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+  }
+  .wrap { width: min(1060px, 100% - 40px); margin-inline: auto; }
+  section { padding: 56px 0; border-top: 1px solid var(--border); }
+  section:first-of-type { border-top: 0; }
+  .lead { color: var(--muted); max-width: 62ch; }
+
+  /* ---- header ---- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(11, 12, 16, 0.88);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; }
+  .brand img { width: 32px; height: 32px; border-radius: 9px; }
+  .brand b { color: var(--text-strong); font-size: 18px; letter-spacing: 0.2px; }
+  .brand span { color: var(--accent-hover); font-size: 11px; font-weight: 700; letter-spacing: 2px; display: block; margin-top: -3px; }
+  .ghost {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 7px 13px;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .ghost:hover { border-color: var(--accent-hover); color: var(--text-strong); }
+
+  /* ---- hero ---- */
+  .hero { padding: 68px 0 46px; text-align: center; }
+  .hero img.mark { width: 92px; height: 92px; border-radius: 24px; margin-bottom: 20px; }
+  .hero h1 { font-size: clamp(34px, 6vw, 52px); letter-spacing: -0.5px; }
+  .hero .lead { margin-inline: auto; font-size: clamp(16px, 2vw, 19px); }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 26px 0 10px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+  }
+  .btn--primary { background: var(--accent); color: #fff; }
+  .btn--primary:hover { background: var(--accent-hover); }
+  .btn--ghost { border-color: var(--border-strong); color: var(--text-strong); }
+  .btn--ghost:hover { border-color: var(--accent-hover); }
+  .btn small { display: block; font-weight: 500; font-size: 12px; opacity: 0.85; }
+  .relnote { color: var(--muted); font-size: 13.5px; }
+
+  /* ---- downloads ---- */
+  .dl-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-top: 24px; }
+  .dl {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .dl h3 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .dl ul { list-style: none; margin: 10px 0 0; padding: 0; }
+  .dl li { margin: 0 0 7px; }
+  .dl a { text-decoration: none; font-weight: 600; }
+  .dl a:hover { text-decoration: underline; }
+  .dl .size { color: var(--muted); font-weight: 400; font-size: 12.5px; }
+  .tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #ffcf3f;
+    background: rgba(255, 200, 40, 0.13);
+    border: 1px solid rgba(255, 200, 40, 0.3);
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+  .tag--ok { color: #48d597; background: rgba(72, 213, 151, 0.12); border-color: rgba(72, 213, 151, 0.3); }
+  .note {
+    background: var(--accent-soft);
+    border: 1px solid rgba(216, 31, 38, 0.3);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 22px;
+    font-size: 14.5px;
+  }
+  .note p:last-child { margin: 0; }
+
+  /* ---- features ---- */
+  .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card li { margin-bottom: 6px; }
+
+  /* ---- shots ---- */
+  .shots { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+  .shots figure { margin: 0; }
+  .shots img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+  }
+  .shots figcaption { color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+
+  /* ---- table ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 540px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-strong); font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; }
+  tr:last-child td { border-bottom: 0; }
+  td code { background: transparent; border: 0; padding: 0; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--border); padding: 34px 0 48px; color: var(--muted); font-size: 14px; }
+  footer a { color: var(--muted); }
+  .disclaimer { font-size: 13px; margin-top: 10px; }
+  [data-pt] { display: none; }
+  html[data-lang="pt"] [data-pt] { display: initial; }
+  html[data-lang="pt"] [data-en] { display: none; }
+  html[data-lang="pt"] li[data-pt], html[data-lang="pt"] p[data-pt] { display: list-item; }
+  html[data-lang="pt"] p[data-pt] { display: block; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top">
+      <img src="icon.svg" alt="">
+      <span style="line-height:1.1">
+        <b>HIDra</b>
+        <span>CONFIG</span>
+      </span>
+    </a>
+    <button class="ghost" id="lang" type="button">Português</button>
+    <a class="ghost" href="https://github.com/luizjr/HIDra">GitHub</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <img class="mark" src="icon.svg" alt="HIDra">
+      <h1>
+        <span data-en>Your peripherals, your operating system</span>
+        <span data-pt>Seus periféricos, no seu sistema</span>
+      </h1>
+      <p class="lead">
+        <span data-en>Configure gaming mice and keyboards on <b>Linux, Windows and macOS</b> — RGB lighting, DPI, polling rate and key remapping, written straight to the device over raw HID. No vendor software, no background service, no account.</span>
+        <span data-pt>Configure mouses e teclados gamer no <b>Linux, Windows e macOS</b> — iluminação RGB, DPI, taxa de polling e remapeamento de teclas, gravados direto no aparelho por HID. Sem programa do fabricante, sem serviço em segundo plano, sem conta.</span>
+      </p>
+      <div class="cta">
+        <a class="btn btn--primary" id="primary-dl" href="https://github.com/luizjr/HIDra/releases/latest">
+          <span data-en>Download</span><span data-pt>Baixar</span>
+        </a>
+        <a class="btn btn--ghost" href="#downloads">
+          <span data-en>All downloads</span><span data-pt>Todos os downloads</span>
+        </a>
+      </div>
+      <p class="relnote" id="relnote">
+        <span data-en>Free and open source, GPL-3.0.</span>
+        <span data-pt>Livre e de código aberto, GPL-3.0.</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="downloads">
+    <div class="wrap">
+      <h2><span data-en>Downloads</span><span data-pt>Downloads</span></h2>
+      <p class="lead">
+        <span data-en>Everything below is built and published automatically by GitHub Actions from the tagged source.</span>
+        <span data-pt>Tudo abaixo é compilado e publicado automaticamente pelo GitHub Actions a partir do código com tag.</span>
+      </p>
+
+      <div class="dl-grid">
+        <div class="dl">
+          <h3>Linux <span class="tag tag--ok" data-en>tested</span><span class="tag tag--ok" data-pt>testado</span></h3>
+          <ul id="dl-linux">
+            <li><a href="https://github.com/luizjr/HIDra/releases/latest">.deb · .rpm · AppImage</a></li>
+          </ul>
+          <p class="size" style="margin:10px 0 0">
+            <span data-en>The .deb and .rpm install the udev rule for you — just replug the device.</span>
+            <span data-pt>O .deb e o .rpm já instalam a regra udev — basta reconectar o aparelho.</span>
+          </p>
+        </div>
+        <div class="dl">
+          <h3>Windows <span class="tag" data-en>untested</span><span class="tag" data-pt>sem teste</span></h3>
+          <ul id="dl-windows">
+            <li><a href="https://github.com/luizjr/HIDra/releases/latest">.exe · .msi</a></li>
+          </ul>
+          <p class="size" style="margin:10px 0 0">
+            <span data-en>Unsigned: SmartScreen asks — <i>More info → Run anyway</i>.</span>
+            <span data-pt>Sem assinatura: o SmartScreen pergunta — <i>Mais informações → Executar assim mesmo</i>.</span>
+          </p>
+        </div>
+        <div class="dl">
+          <h3>macOS <span class="tag" data-en>untested</span><span class="tag" data-pt>sem teste</span></h3>
+          <ul id="dl-macos">
+            <li><a href="https://github.com/luizjr/HIDra/releases/latest">.dmg</a></li>
+          </ul>
+          <p class="size" style="margin:10px 0 0">
+            <span data-en>Not notarized: first launch needs <i>right-click → Open</i>.</span>
+            <span data-pt>Sem notarização: a primeira abertura precisa de <i>clique direito → Abrir</i>.</span>
+          </p>
+        </div>
+      </div>
+
+      <p class="relnote" style="margin-top:18px">
+        <span data-en>Want the current state of the code instead? Every push to <code>main</code> rebuilds all three installers as the rolling <a href="https://github.com/luizjr/HIDra/releases/tag/nightly">nightly pre-release</a>.</span>
+        <span data-pt>Quer o estado atual do código? Todo push na <code>main</code> recompila os três instaladores na <a href="https://github.com/luizjr/HIDra/releases/tag/nightly">pré-release nightly</a>.</span>
+      </p>
+
+      <div class="note">
+        <p>
+          <span data-en><b>Windows and macOS builds are experimental.</b> They compile and package in CI, but nobody has run them against real hardware yet. If you own one of the supported devices, trying them and <a href="https://github.com/luizjr/HIDra/issues/new/choose">reporting what happens</a> is the single most useful thing you can do for this project.</span>
+          <span data-pt><b>As versões de Windows e macOS são experimentais.</b> Elas compilam e empacotam no CI, mas ninguém as rodou contra hardware real ainda. Se você tem um dos aparelhos compatíveis, testar e <a href="https://github.com/luizjr/HIDra/issues/new/choose">contar o que aconteceu</a> é a coisa mais útil que você pode fazer pelo projeto.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2><span data-en>What it does</span><span data-pt>O que ele faz</span></h2>
+      <div class="cards">
+        <div class="card">
+          <h3><span data-en>Mice</span><span data-pt>Mouses</span></h3>
+          <ul>
+            <li data-en>Lighting: steady, breathing, cycle, off — colour, brightness, speed</li>
+            <li data-pt>Iluminação: sólido, respiração, ciclo, desligado — cor, brilho, velocidade</li>
+            <li data-en>5 DPI stages with independent X/Y and a colour each</li>
+            <li data-pt>5 estágios de DPI com X/Y independentes e uma cor cada</li>
+            <li data-en>Remap all 8 buttons: clicks, DPI, a key, a combo, media, fire</li>
+            <li data-pt>Remapear os 8 botões: cliques, DPI, tecla, combo, multimídia, disparo</li>
+            <li data-en>Polling rate: 125 / 250 / 500 / 1000 Hz</li>
+            <li data-pt>Taxa de polling: 125 / 250 / 500 / 1000 Hz</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span data-en>Keyboards</span><span data-pt>Teclados</span></h3>
+          <ul>
+            <li data-en>18 lighting effects plus per-key custom colours</li>
+            <li data-pt>18 efeitos de iluminação e cores personalizadas por tecla</li>
+            <li data-en>Brightness, speed, direction and full-RGB mode</li>
+            <li data-pt>Brilho, velocidade, direção e modo multicolor (Full RGB)</li>
+            <li data-en>3 onboard profiles, switched from the app</li>
+            <li data-pt>3 perfis gravados no teclado, trocados pelo app</li>
+            <li data-en>Key remapping, and restore the factory keymap</li>
+            <li data-pt>Remapeamento de teclas e restauração do mapa de fábrica</li>
+          </ul>
+        </div>
+      </div>
+      <p class="lead" style="margin-top:18px">
+        <span data-en>Everything is stored on the device itself, so it keeps working after you close the app, reboot, or plug the device into another machine.</span>
+        <span data-pt>Tudo fica gravado no próprio aparelho: continua valendo depois de fechar o app, reiniciar ou levar o periférico para outra máquina.</span>
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2><span data-en>Screenshots</span><span data-pt>Telas</span></h2>
+      <div class="shots">
+        <figure>
+          <a href="img/mouse.png"><img src="img/mouse.png" alt="Mouse lighting, DPI and buttons" loading="lazy" width="1280" height="820"></a>
+          <figcaption><span data-en>Mouse lighting, with a live preview</span><span data-pt>Iluminação do mouse, com pré-visualização</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/keyboard.png"><img src="img/keyboard.png" alt="Keyboard lighting effects" loading="lazy" width="1280" height="820"></a>
+          <figcaption><span data-en>18 keyboard effects, 3 onboard profiles</span><span data-pt>18 efeitos de teclado, 3 perfis gravados</span></figcaption>
+        </figure>
+        <figure>
+          <a href="img/perkey.png"><img src="img/perkey.png" alt="Per-key colour editor" loading="lazy" width="1280" height="820"></a>
+          <figcaption><span data-en>Per-key colours, painted one key at a time</span><span data-pt>Cores por tecla, pintadas uma a uma</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2><span data-en>Supported devices</span><span data-pt>Dispositivos compatíveis</span></h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th><span data-en>Device</span><span data-pt>Dispositivo</span></th>
+              <th><span data-en>USB id</span><span data-pt>ID USB</span></th>
+              <th><span data-en>Status</span><span data-pt>Situação</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Redragon Cobra Pro / M711-PRO <span class="size" data-en>(2.4 GHz receiver)</span><span class="size" data-pt>(receptor 2.4 GHz)</span></td>
+              <td><code>25A7:FA07</code></td>
+              <td><span class="tag tag--ok" data-en>verified</span><span class="tag tag--ok" data-pt>validado</span></td>
+            </tr>
+            <tr>
+              <td>Redragon Cobra Pro / M711-PRO <span class="size" data-en>(cable)</span><span class="size" data-pt>(cabo)</span></td>
+              <td><code>25A7:FA08</code></td>
+              <td><span class="tag tag--ok" data-en>verified</span><span class="tag tag--ok" data-pt>validado</span></td>
+            </tr>
+            <tr>
+              <td>Redragon Brahma Pro / K586RGB-PRO</td>
+              <td><code>0C45:5004</code></td>
+              <td><span class="tag tag--ok" data-en>verified</span><span class="tag tag--ok" data-pt>validado</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note" style="background:var(--bg-soft);border-color:var(--border)">
+        <p>
+          <span data-en><b>Your device is not listed?</b> Peripherals are often the same board sold under several names, speaking the same protocol — adding one is frequently a single line in the device table. There is a <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">step-by-step guide</a>, and if you would rather not touch code, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">open a device request</a> with the output of <code>lsusb</code>.</span>
+          <span data-pt><b>Seu aparelho não está na lista?</b> Periféricos costumam ser a mesma placa vendida com nomes diferentes, falando o mesmo protocolo — adicionar um é, muitas vezes, uma linha na tabela de dispositivos. Existe um <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">guia passo a passo</a> e, se você preferir não mexer em código, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">abra um pedido de dispositivo</a> com a saída do <code>lsusb</code>.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2><span data-en>How it works</span><span data-pt>Como funciona</span></h2>
+      <p class="lead">
+        <span data-en>HIDra is a <a href="https://tauri.app">Tauri</a> app: a Rust backend that owns every byte sent to the hardware, and a small React interface. It opens the device's vendor HID collection and writes the same packets the official tool writes — no kernel module, no daemon, nothing running when the window is closed.</span>
+        <span data-pt>O HIDra é um app <a href="https://tauri.app">Tauri</a>: backend em Rust que controla cada byte enviado ao hardware e uma interface React enxuta. Ele abre a coleção HID do fabricante e escreve os mesmos pacotes que o programa oficial escreve — sem módulo de kernel, sem serviço, sem nada rodando com a janela fechada.</span>
+      </p>
+      <p class="lead">
+        <span data-en>The keyboard protocol was reverse-engineered by capturing the vendor tool's USB traffic, and every byte of it is <a href="https://github.com/luizjr/HIDra/blob/main/PROTOCOL.md">written down in the repository</a> so nobody has to do that work twice.</span>
+        <span data-pt>O protocolo do teclado foi obtido capturando o tráfego USB do programa oficial, e cada byte está <a href="https://github.com/luizjr/HIDra/blob/main/PROTOCOL.md">documentado no repositório</a> para ninguém precisar refazer esse trabalho.</span>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/luizjr/HIDra">GitHub</a> ·
+      <a href="https://github.com/luizjr/HIDra/releases">Releases</a> ·
+      <a href="https://github.com/luizjr/HIDra/blob/main/CONTRIBUTING.md"><span data-en>Contributing</span><span data-pt>Contribuindo</span></a> ·
+      <a href="https://github.com/luizjr/HIDra/blob/main/LICENSE">GPL-3.0-or-later</a>
+    </p>
+    <p class="disclaimer">
+      <span data-en>Not affiliated with, endorsed by, or sponsored by any hardware manufacturer. Product names are used only to state which hardware is supported.</span>
+      <span data-pt>Não é afiliado, endossado nem patrocinado por nenhum fabricante. Os nomes de produtos aparecem apenas para dizer qual hardware é compatível.</span>
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var REPO = "luizjr/HIDra";
+  var RELEASES = "https://github.com/" + REPO + "/releases/latest";
+  var html = document.documentElement;
+
+  // ---- language ----------------------------------------------------------
+  var btn = document.getElementById("lang");
+  function setLang(lang) {
+    html.dataset.lang = lang;
+    html.lang = lang === "pt" ? "pt-BR" : "en";
+    btn.textContent = lang === "pt" ? "English" : "Português";
+    try { localStorage.setItem("hidra.lang", lang); } catch (e) {}
+  }
+  var stored = null;
+  try { stored = localStorage.getItem("hidra.lang"); } catch (e) {}
+  setLang(stored || (/^pt\b/i.test(navigator.language || "") ? "pt" : "en"));
+  btn.addEventListener("click", function () {
+    setLang(html.dataset.lang === "pt" ? "en" : "pt");
+  });
+
+  // ---- downloads, straight from the latest release ------------------------
+  var PLATFORMS = {
+    linux: [
+      { re: /\.deb$/i, label: ".deb", hint: "Debian · Ubuntu · Mint · Pop!_OS" },
+      { re: /\.rpm$/i, label: ".rpm", hint: "Fedora · openSUSE" },
+      { re: /\.AppImage$/i, label: "AppImage", hint: "" }
+    ],
+    windows: [
+      { re: /-setup\.exe$/i, label: ".exe", hint: "" },
+      { re: /\.msi$/i, label: ".msi", hint: "" }
+    ],
+    macos: [
+      { re: /\.dmg$/i, label: ".dmg", hint: "Intel + Apple Silicon" }
+    ]
+  };
+  var PRIMARY = { linux: /\.deb$/i, windows: /-setup\.exe$/i, macos: /\.dmg$/i };
+
+  function detect() {
+    var ua = navigator.userAgent || "";
+    if (/Windows/i.test(ua)) return "windows";
+    if (/Mac OS X|Macintosh/i.test(ua)) return "macos";
+    if (/Linux|X11|CrOS/i.test(ua)) return "linux";
+    return null;
+  }
+
+  function mb(bytes) {
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }
+
+  fetch("https://api.github.com/repos/" + REPO + "/releases/latest", {
+    headers: { Accept: "application/vnd.github+json" }
+  })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (release) {
+      var assets = release.assets || [];
+      var pt = html.dataset.lang === "pt";
+
+      Object.keys(PLATFORMS).forEach(function (os) {
+        var list = document.getElementById("dl-" + os);
+        var items = [];
+        PLATFORMS[os].forEach(function (kind) {
+          var asset = assets.filter(function (a) { return kind.re.test(a.name); })[0];
+          if (!asset) return;
+          var li = document.createElement("li");
+          var a = document.createElement("a");
+          a.href = asset.browser_download_url;
+          a.textContent = kind.label;
+          li.appendChild(a);
+          var meta = document.createElement("span");
+          meta.className = "size";
+          meta.textContent = " " + mb(asset.size) + (kind.hint ? " · " + kind.hint : "");
+          li.appendChild(meta);
+          items.push(li);
+        });
+        if (items.length) {
+          list.textContent = "";
+          items.forEach(function (li) { list.appendChild(li); });
+        }
+      });
+
+      var os = detect();
+      var main = document.getElementById("primary-dl");
+      var wanted = os && assets.filter(function (a) { return PRIMARY[os].test(a.name); })[0];
+      if (wanted) {
+        var names = { linux: "Linux", windows: "Windows", macos: "macOS" };
+        main.href = wanted.browser_download_url;
+        main.textContent = "";
+        var strong = document.createElement("span");
+        strong.textContent = (html.dataset.lang === "pt" ? "Baixar para " : "Download for ") + names[os];
+        var small = document.createElement("small");
+        small.textContent = wanted.name + " · " + mb(wanted.size);
+        main.appendChild(strong);
+        main.appendChild(small);
+      }
+
+      var note = document.getElementById("relnote");
+      note.textContent =
+        (html.dataset.lang === "pt" ? "Versão " : "Version ") + release.tag_name +
+        " · " + (html.dataset.lang === "pt" ? "livre e de código aberto, GPL-3.0" : "free and open source, GPL-3.0");
+    })
+    .catch(function () {
+      // Rate limited or offline: the static links to the releases page still work.
+    });
+})();
+</script>
+</body>
+</html>
