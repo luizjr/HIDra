@@ -1,6 +1,6 @@
 [package]
 name = "hidra"
-version = "0.1.0"
+version = "0.1.1"
 description = "Open-source configurator for gaming mice and keyboards over raw HID"
 authors = ["HIDra contributors"]
 license = "GPL-3.0-or-later"

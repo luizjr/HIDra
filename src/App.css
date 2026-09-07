@@ -35,7 +35,7 @@
   height: 30px;
   border-radius: 8px;
   flex: none;
-  filter: drop-shadow(0 0 10px rgba(216, 31, 38, 0.4));
+  box-shadow: 0 0 10px rgba(216, 31, 38, 0.35);
 }
 
 .brand__text {
@@ -718,7 +718,6 @@
 .mouse-svg {
   width: 190px;
   height: auto;
-  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.5));
 }
 
 .mouse-map {

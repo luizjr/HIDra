@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1]
+
+### Fixed
+- Black rectangles painted over the mouse lighting tab on Linux. WebKitGTK puts
+  filtered elements on their own compositing layer and blits it to the wrong
+  place on some GPU setups (reported on a hybrid Intel + NVIDIA laptop under
+  Wayland, WebKitGTK 2.52). The mouse preview's LED glow is now drawn with
+  gradients and stacked strokes, so the app uses no CSS or SVG filters at all.
+
+### Added
+- A troubleshooting section in both READMEs: rendering artifacts, wireless
+  writes that do not stick, and device permissions.
+
 ## [0.1.0] — first public release
 
 ### Added
@@ -20,5 +33,6 @@ All notable changes to this project are documented here. The format follows
 - Byte-level protocol documentation for both devices in `PROTOCOL.md`.
 - Linux, Windows and macOS packages built by CI.
 
-[Unreleased]: https://github.com/luizjr/HIDra/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/luizjr/HIDra/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/luizjr/HIDra/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/luizjr/HIDra/releases/tag/v0.1.0

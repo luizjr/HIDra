@@ -1,6 +1,9 @@
 import type { Rgb } from "../../types";
 import { rgbCss } from "../../hooks";
 
+/** The RGB strip that wraps the base of the mouse. */
+const STRIP = "M46 236 C58 268 78 282 100 282 C122 282 142 268 154 236";
+
 interface MouseSilhouetteProps {
   color: Rgb;
   /** 0..255 — scales the glow intensity. */
@@ -29,13 +32,14 @@ export function MouseSilhouette({
           <stop offset="0" stopColor="#23262d" />
           <stop offset="1" stopColor="#141519" />
         </linearGradient>
-        <filter id="ledGlow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="7" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
+        {/* The LED glow is a gradient halo rather than a feGaussianBlur filter:
+            WebKitGTK composites filtered subtrees onto the wrong surface on
+            some Linux GPU setups, painting black rectangles over the page. */}
+        <radialGradient id="ledHalo">
+          <stop offset="0" stopColor={stripColor} stopOpacity="0.5" />
+          <stop offset="0.55" stopColor={stripColor} stopOpacity="0.16" />
+          <stop offset="1" stopColor={stripColor} stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       {/* body */}
@@ -63,36 +67,33 @@ export function MouseSilhouette({
 
       {/* scroll wheel */}
       <rect x="90" y="52" width="20" height="40" rx="10" fill="#0e0f12" stroke="#33373f" strokeWidth="2" />
-      <rect
-        x="93"
-        y="56"
-        width="14"
-        height="32"
-        rx="7"
-        fill={stripColor}
-        opacity={glow}
-        filter={lit ? "url(#ledGlow)" : undefined}
-      />
+      {lit && <ellipse cx="100" cy="72" rx="38" ry="50" fill="url(#ledHalo)" opacity={glow} />}
+      <rect x="93" y="56" width="14" height="32" rx="7" fill={stripColor} opacity={glow} />
 
-      {/* RGB accent strip around the base */}
+      {/* RGB accent strip around the base — stacked strokes fake the bloom */}
+      {lit &&
+        [26, 16].map((w, i) => (
+          <path
+            key={w}
+            d={STRIP}
+            fill="none"
+            stroke={stripColor}
+            strokeWidth={w}
+            strokeLinecap="round"
+            opacity={glow * (i === 0 ? 0.12 : 0.26)}
+          />
+        ))}
       <path
-        d="M46 236 C58 268 78 282 100 282 C122 282 142 268 154 236"
+        d={STRIP}
         fill="none"
         stroke={stripColor}
         strokeWidth="8"
         strokeLinecap="round"
         opacity={glow}
-        filter={lit ? "url(#ledGlow)" : undefined}
       />
       {/* logo dot */}
-      <circle
-        cx="100"
-        cy="188"
-        r="15"
-        fill={stripColor}
-        opacity={glow}
-        filter={lit ? "url(#ledGlow)" : undefined}
-      />
+      {lit && <circle cx="100" cy="188" r="42" fill="url(#ledHalo)" opacity={glow} />}
+      <circle cx="100" cy="188" r="15" fill={stripColor} opacity={glow} />
     </svg>
   );
 }

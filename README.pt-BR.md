@@ -132,6 +132,24 @@ npm run tauri dev      # abre o app em modo desenvolvimento
 npm run tauri build    # instaladores em src-tauri/target/release/bundle
 ```
 
+## Problemas comuns
+
+**Linux: retângulos pretos por cima da janela.** O WebKitGTK coloca elementos
+com filtro numa camada composta separada e, em algumas configurações de GPU
+(híbrido Intel + NVIDIA no Wayland, visto no WebKitGTK 2.52), desenha essa
+camada no lugar errado. Por isso o HIDra não usa nenhum filtro CSS ou SVG. Se
+mesmo assim acontecer — aqui ou em outro app Tauri — a saída bruta é
+`WEBKIT_DISABLE_COMPOSITING_MODE=1 hidra`, que desliga a composição por GPU.
+
+**Um ajuste não "pega" no mouse sem fio.** O rádio 2.4 GHz dorme quando o mouse
+está parado. Mexa no mouse enquanto clica em *Aplicar*, ou use o cabo.
+
+**O aparelho aparece como desconectado no Linux.** Falta a regra udev, ou o
+aparelho não foi reconectado depois de instalá-la: `sudo sh
+packaging/install-udev.sh` a partir do código-fonte (o `.deb`/`.rpm` já trazem a
+regra), e então desconecte e reconecte.
+
+
 ## Como funciona
 
 O app é [Tauri](https://tauri.app): backend em Rust que faz toda a conversa com

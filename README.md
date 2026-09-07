@@ -138,6 +138,24 @@ npm run tauri dev      # run the app in development mode
 npm run tauri build    # installers land in src-tauri/target/release/bundle
 ```
 
+## Troubleshooting
+
+**Linux: black rectangles painted over parts of the window.** WebKitGTK puts
+filtered elements on their own compositing layer and, on some GPU setups
+(hybrid Intel + NVIDIA under Wayland, reported on WebKitGTK 2.52), blits those
+layers to the wrong place. HIDra therefore uses no CSS or SVG filters at all. If
+you still hit it — in this app or another Tauri one — the blunt escape hatch is
+`WEBKIT_DISABLE_COMPOSITING_MODE=1 hidra`, which turns GPU compositing off
+entirely.
+
+**A setting does not stick on a wireless mouse.** The 2.4 GHz radio sleeps when
+the mouse is idle. Move the mouse while pressing *Apply*, or connect the cable.
+
+**The device shows as disconnected on Linux.** The udev rule is missing or the
+device was not replugged after installing it: `sudo sh packaging/install-udev.sh`
+from a source checkout (the `.deb`/`.rpm` ship it), then unplug and replug.
+
+
 ## How it works
 
 The app is [Tauri](https://tauri.app): a Rust backend that owns all device I/O
