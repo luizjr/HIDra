@@ -8,8 +8,8 @@
 //! with the GUI driven by xdotool. Output reports ID 0x04, 64 bytes; 16-bit sum
 //! of bytes[3..63] stored little-endian at [1],[2]. Writes are wrapped BEGIN..END.
 
-use crate::error::{DevError, Result};
 use crate::devices::Protocol;
+use crate::error::{DevError, Result};
 use crate::hid::{self, Kind, Link};
 use hidapi::HidApi;
 use serde::Serialize;
@@ -89,6 +89,9 @@ fn write_param(link: &Link, profile: u8, param: u16, data: &[u8]) -> Result<()> 
     Ok(())
 }
 
+// One argument per field of the lighting block, mirroring the protocol so the
+// call site reads like PROTOCOL.md.
+#[allow(clippy::too_many_arguments)]
 pub fn set_effect(
     api: &HidApi,
     profile: u8,
@@ -105,7 +108,12 @@ pub fn set_effect(
     write_param(&link, profile, P_MODE, &[effect])?;
     write_param(&link, profile, P_BRIGHT, &[brightness.min(BRIGHT_MAX)])?;
     write_param(&link, profile, P_SPEED, &[speed.clamp(1, SPEED_MAX)])?;
-    write_param(&link, profile, P_DIR, &[if direction != 0 { 0xFF } else { 0x00 }])?;
+    write_param(
+        &link,
+        profile,
+        P_DIR,
+        &[if direction != 0 { 0xFF } else { 0x00 }],
+    )?;
     write_param(&link, profile, P_FULLRGB, &[full_rgb as u8])?;
     write_param(&link, profile, P_COLOR, &[r, g, b])?;
     Ok(())
@@ -181,10 +189,24 @@ pub fn effects() -> Vec<Effect> {
     // Order and PT names taken from the official app's combo box.
     // IDs = combo index + 1; "Customizável" = 0x14 (20).
     let names = [
-        "Corredor", "A Nuvem", "Lâmina Veloz", "Spectrum", "Respiração", "Sólido",
-        "Reativo", "Ondular", "Reativo (Horizontal)", "Florescer Gélido", "Rainbow",
-        "Corrida das Sombras", "Tornado", "Recarregar", "A Matrix", "Surmount",
-        "Passagem Dupla", "Vulto do Spectro",
+        "Corredor",
+        "A Nuvem",
+        "Lâmina Veloz",
+        "Spectrum",
+        "Respiração",
+        "Sólido",
+        "Reativo",
+        "Ondular",
+        "Reativo (Horizontal)",
+        "Florescer Gélido",
+        "Rainbow",
+        "Corrida das Sombras",
+        "Tornado",
+        "Recarregar",
+        "A Matrix",
+        "Surmount",
+        "Passagem Dupla",
+        "Vulto do Spectro",
     ];
     let mut v: Vec<Effect> = names
         .iter()
@@ -196,7 +218,12 @@ pub fn effects() -> Vec<Effect> {
             has_direction: matches!(i, 0 | 6 | 7 | 10),
         })
         .collect();
-    v.push(Effect { id: EFFECT_CUSTOM, name: "Customizável".into(), has_color: false, has_direction: false });
+    v.push(Effect {
+        id: EFFECT_CUSTOM,
+        name: "Customizável".into(),
+        has_color: false,
+        has_direction: false,
+    });
     v
 }
 
@@ -216,7 +243,16 @@ pub struct KbState {
 
 pub fn read_state(api: &HidApi, profile: u8) -> KbState {
     let Ok(link) = hid::open_speaking(api, Kind::Keyboard, Protocol::Sonix64) else {
-        return KbState { present: false, active: None, effect: None, brightness: None, speed: None, direction: None, full_rgb: None, color: None };
+        return KbState {
+            present: false,
+            active: None,
+            effect: None,
+            brightness: None,
+            speed: None,
+            direction: None,
+            full_rgb: None,
+            color: None,
+        };
     };
     let active = read_active_profile(&link);
     match read_block(&link, CMD_READ_SETTINGS, profile_base(profile), 0x38) {
@@ -230,7 +266,16 @@ pub fn read_state(api: &HidApi, profile: u8) -> KbState {
             full_rgb: Some(d[4] != 0),
             color: Some([d[5], d[6], d[7]]),
         },
-        _ => KbState { present: true, active, effect: None, brightness: None, speed: None, direction: None, full_rgb: None, color: None },
+        _ => KbState {
+            present: true,
+            active,
+            effect: None,
+            brightness: None,
+            speed: None,
+            direction: None,
+            full_rgb: None,
+            color: None,
+        },
     }
 }
 
@@ -278,8 +323,14 @@ pub const DEFAULT_KEYMAP: [u8; 420] = [
 ];
 
 const KEYMAP_OFFSETS: [(u16, u8); 8] = [
-    (0x0000, 0x38), (0x0038, 0x38), (0x0070, 0x38), (0x00a8, 0x38),
-    (0x00e0, 0x38), (0x0118, 0x38), (0x0150, 0x38), (0x0188, 0x1c),
+    (0x0000, 0x38),
+    (0x0038, 0x38),
+    (0x0070, 0x38),
+    (0x00a8, 0x38),
+    (0x00e0, 0x38),
+    (0x0118, 0x38),
+    (0x0150, 0x38),
+    (0x0188, 0x1c),
 ];
 
 /// Read the CURRENT keymap (cmd 0x0f). Confirmed on hardware: writes via
@@ -312,7 +363,11 @@ fn write_keymap(link: &Link, table: &[u8; 420]) -> Result<()> {
     link.kb_write(&begin())?;
     let mut pos = 0usize;
     for (off, len) in KEYMAP_OFFSETS {
-        link.kb_write(&frame(CMD_WRITE_KEYMAP, off, &table[pos..pos + len as usize]))?;
+        link.kb_write(&frame(
+            CMD_WRITE_KEYMAP,
+            off,
+            &table[pos..pos + len as usize],
+        ))?;
         pos += len as usize;
     }
     link.kb_write(&end())?;
@@ -323,27 +378,84 @@ fn write_keymap(link: &Link, table: &[u8; 420]) -> Result<()> {
 fn usage_label(u: u8) -> Option<&'static str> {
     Some(match u {
         0x04..=0x1d => return Some(LETTERS[(u - 0x04) as usize]),
-        0x1e => "1", 0x1f => "2", 0x20 => "3", 0x21 => "4", 0x22 => "5",
-        0x23 => "6", 0x24 => "7", 0x25 => "8", 0x26 => "9", 0x27 => "0",
-        0x28 => "Enter", 0x29 => "Esc", 0x2a => "Backspace", 0x2b => "Tab", 0x2c => "Espaço",
-        0x2d => "-", 0x2e => "=", 0x2f => "[", 0x30 => "]", 0x31 => "\\",
-        0x33 => ";", 0x34 => "'", 0x35 => "`", 0x36 => ",", 0x37 => ".", 0x38 => "/",
+        0x1e => "1",
+        0x1f => "2",
+        0x20 => "3",
+        0x21 => "4",
+        0x22 => "5",
+        0x23 => "6",
+        0x24 => "7",
+        0x25 => "8",
+        0x26 => "9",
+        0x27 => "0",
+        0x28 => "Enter",
+        0x29 => "Esc",
+        0x2a => "Backspace",
+        0x2b => "Tab",
+        0x2c => "Espaço",
+        0x2d => "-",
+        0x2e => "=",
+        0x2f => "[",
+        0x30 => "]",
+        0x31 => "\\",
+        0x33 => ";",
+        0x34 => "'",
+        0x35 => "`",
+        0x36 => ",",
+        0x37 => ".",
+        0x38 => "/",
         0x39 => "CapsLock",
-        0x3a => "F1", 0x3b => "F2", 0x3c => "F3", 0x3d => "F4", 0x3e => "F5", 0x3f => "F6",
-        0x40 => "F7", 0x41 => "F8", 0x42 => "F9", 0x43 => "F10", 0x44 => "F11", 0x45 => "F12",
-        0x46 => "PrtSc", 0x47 => "ScrLk", 0x48 => "Pause", 0x49 => "Insert", 0x4a => "Home",
-        0x4b => "PgUp", 0x4c => "Delete", 0x4d => "End", 0x4e => "PgDn",
-        0x4f => "→", 0x50 => "←", 0x51 => "↓", 0x52 => "↑",
-        0x53 => "NumLk", 0x54 => "Num/", 0x55 => "Num*", 0x56 => "Num-", 0x57 => "Num+",
-        0x58 => "NumEnter", 0x59 => "Num1", 0x5a => "Num2", 0x5b => "Num3", 0x5c => "Num4",
-        0x5d => "Num5", 0x5e => "Num6", 0x5f => "Num7", 0x60 => "Num8", 0x61 => "Num9",
-        0x62 => "Num0", 0x63 => "Num.", 0x64 => "\\|", 0x65 => "Menu", 0x87 => "/? (ABNT)",
+        0x3a => "F1",
+        0x3b => "F2",
+        0x3c => "F3",
+        0x3d => "F4",
+        0x3e => "F5",
+        0x3f => "F6",
+        0x40 => "F7",
+        0x41 => "F8",
+        0x42 => "F9",
+        0x43 => "F10",
+        0x44 => "F11",
+        0x45 => "F12",
+        0x46 => "PrtSc",
+        0x47 => "ScrLk",
+        0x48 => "Pause",
+        0x49 => "Insert",
+        0x4a => "Home",
+        0x4b => "PgUp",
+        0x4c => "Delete",
+        0x4d => "End",
+        0x4e => "PgDn",
+        0x4f => "→",
+        0x50 => "←",
+        0x51 => "↓",
+        0x52 => "↑",
+        0x53 => "NumLk",
+        0x54 => "Num/",
+        0x55 => "Num*",
+        0x56 => "Num-",
+        0x57 => "Num+",
+        0x58 => "NumEnter",
+        0x59 => "Num1",
+        0x5a => "Num2",
+        0x5b => "Num3",
+        0x5c => "Num4",
+        0x5d => "Num5",
+        0x5e => "Num6",
+        0x5f => "Num7",
+        0x60 => "Num8",
+        0x61 => "Num9",
+        0x62 => "Num0",
+        0x63 => "Num.",
+        0x64 => "\\|",
+        0x65 => "Menu",
+        0x87 => "/? (ABNT)",
         _ => return None,
     })
 }
 const LETTERS: [&str; 26] = [
-    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-    "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+    "T", "U", "V", "W", "X", "Y", "Z",
 ];
 
 #[derive(Serialize)]
@@ -358,7 +470,11 @@ pub struct RemapKey {
 pub fn remap_keys() -> Vec<RemapKey> {
     let mut out = Vec::new();
     for i in 0..(DEFAULT_KEYMAP.len() / 3) {
-        let e = [DEFAULT_KEYMAP[i * 3], DEFAULT_KEYMAP[i * 3 + 1], DEFAULT_KEYMAP[i * 3 + 2]];
+        let e = [
+            DEFAULT_KEYMAP[i * 3],
+            DEFAULT_KEYMAP[i * 3 + 1],
+            DEFAULT_KEYMAP[i * 3 + 2],
+        ];
         let label = match e {
             [0x02, 0x02, u] => usage_label(u).map(|s| s.to_string()),
             [0x02, 0x01, m] => Some(modifier_label(m).to_string()),
@@ -366,7 +482,11 @@ pub fn remap_keys() -> Vec<RemapKey> {
             _ => None,
         };
         if let Some(label) = label {
-            out.push(RemapKey { index: i, label, raw: e });
+            out.push(RemapKey {
+                index: i,
+                label,
+                raw: e,
+            });
         }
     }
     out
@@ -374,15 +494,26 @@ pub fn remap_keys() -> Vec<RemapKey> {
 
 fn modifier_label(m: u8) -> &'static str {
     match m {
-        0x01 => "Ctrl Esq", 0x02 => "Shift Esq", 0x04 => "Alt Esq", 0x08 => "Win Esq",
-        0x10 => "Ctrl Dir", 0x20 => "Shift Dir", 0x40 => "Alt Dir", 0x80 => "Win Dir",
+        0x01 => "Ctrl Esq",
+        0x02 => "Shift Esq",
+        0x04 => "Alt Esq",
+        0x08 => "Win Esq",
+        0x10 => "Ctrl Dir",
+        0x20 => "Shift Dir",
+        0x40 => "Alt Dir",
+        0x80 => "Win Dir",
         _ => "Modificador",
     }
 }
 fn media_label(lo: u8) -> &'static str {
     match lo {
-        0xcd => "Play/Pause", 0xb5 => "Próxima", 0xb6 => "Anterior", 0xb7 => "Parar",
-        0xe2 => "Mudo", 0xe9 => "Vol +", 0xea => "Vol -",
+        0xcd => "Play/Pause",
+        0xb5 => "Próxima",
+        0xb6 => "Anterior",
+        0xb7 => "Parar",
+        0xe2 => "Mudo",
+        0xe9 => "Vol +",
+        0xea => "Vol -",
         _ => "Multimídia",
     }
 }
@@ -400,7 +531,9 @@ pub fn encode_remap(kind: &str, code: u8, code2: u8) -> [u8; 3] {
 
 pub fn remap(api: &HidApi, index: usize, option: [u8; 3]) -> Result<()> {
     if index >= DEFAULT_KEYMAP.len() / 3 {
-        return Err(DevError::Invalid("índice de tecla fora do intervalo".into()));
+        return Err(DevError::Invalid(
+            "índice de tecla fora do intervalo".into(),
+        ));
     }
     let link = hid::open_speaking(api, Kind::Keyboard, Protocol::Sonix64)?;
     let mut table = read_keymap(&link).unwrap_or(DEFAULT_KEYMAP);

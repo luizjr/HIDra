@@ -40,10 +40,13 @@ Baixe o instalador do seu sistema na
 ### Linux — `.deb`, `.rpm` ou AppImage
 
 ```sh
-sudo dpkg -i hidra_*_amd64.deb        # Debian / Ubuntu / Mint / Pop!_OS
-sudo rpm -i hidra-*.x86_64.rpm        # Fedora / openSUSE
+sudo dpkg -i HIDra_*_amd64.deb        # Debian / Ubuntu / Mint / Pop!_OS
+sudo rpm -i HIDra-*.x86_64.rpm        # Fedora / openSUSE
 chmod +x HIDra_*.AppImage && ./HIDra_*.AppImage
 ```
+
+O executável se chama `hidra`, então o app também abre pelo terminal com esse
+nome.
 
 O `.deb` e o `.rpm` já instalam a regra udev — basta **reconectar o aparelho**
 (ou o dongle) depois de instalar. Com o AppImage, ou rodando do código-fonte,

@@ -9,8 +9,8 @@
 //! Feature Report ID 0x08, 17-byte packets; the sum of every packet and every
 //! memory record settles at 0x55.
 
-use crate::error::{DevError, Result};
 use crate::devices::Protocol;
+use crate::error::{DevError, Result};
 use crate::hid::{self, Kind, Link};
 use hidapi::HidApi;
 use serde::{Deserialize, Serialize};
@@ -244,14 +244,21 @@ fn apply_all(api: &HidApi, packets: &[[u8; 17]]) -> Result<()> {
         return Err(DevError::NotFound);
     }
     let mut ok = false;
-    for f in founds.iter().filter(|f| f.device.protocol == Protocol::Compx17) {
+    for f in founds
+        .iter()
+        .filter(|f| f.device.protocol == Protocol::Compx17)
+    {
         if let Ok(link) = Link::open(api, f) {
             if apply(&link, packets).is_ok() {
                 ok = true;
             }
         }
     }
-    if ok { Ok(()) } else { Err(DevError::NoResponse) }
+    if ok {
+        Ok(())
+    } else {
+        Err(DevError::NoResponse)
+    }
 }
 
 /// Open whichever interface answers reads (prefers USB-C, always awake).
@@ -314,34 +321,82 @@ pub struct MouseState {
 pub fn read_state(api: &HidApi) -> MouseState {
     let found = crate::hid::find(api, Kind::Mouse);
     let Some(found) = found else {
-        return MouseState { present: false, mode: None, led: None, dpi: None, dpi_effect: None, polling: None, buttons: None };
+        return MouseState {
+            present: false,
+            mode: None,
+            led: None,
+            dpi: None,
+            dpi_effect: None,
+            polling: None,
+            buttons: None,
+        };
     };
     let mode = Some(found.connection().to_string());
     let Ok(link) = Link::open(api, &found) else {
-        return MouseState { present: true, mode, led: None, dpi: None, dpi_effect: None, polling: None, buttons: None };
+        return MouseState {
+            present: true,
+            mode,
+            led: None,
+            dpi: None,
+            dpi_effect: None,
+            polling: None,
+            buttons: None,
+        };
     };
 
-    let led = read_register(&link, LED_ADDR, 8).ok().flatten().map(|d| Led {
-        effect: effect_name(d[0]).into(),
-        r: d[1], g: d[2], b: d[3], speed: d[4], brightness: d[5],
-    });
+    let led = read_register(&link, LED_ADDR, 8)
+        .ok()
+        .flatten()
+        .map(|d| Led {
+            effect: effect_name(d[0]).into(),
+            r: d[1],
+            g: d[2],
+            b: d[3],
+            speed: d[4],
+            brightness: d[5],
+        });
 
     // DPI table + colours (3 reads each, shapes 8/8/4).
     let dpi = read_stage_table(&link, DPI_ADDR).and_then(|axes| {
         let colors = read_stage_table(&link, DPI_COLOR_ADDR)?;
-        Some(axes.iter().zip(colors.iter()).map(|(a, c)| Stage {
-            x: byte_to_dpi(a[0]), y: byte_to_dpi(a[1]),
-            color: [c[0], c[1], c[2]], enabled: true,
-        }).collect())
+        Some(
+            axes.iter()
+                .zip(colors.iter())
+                .map(|(a, c)| Stage {
+                    x: byte_to_dpi(a[0]),
+                    y: byte_to_dpi(a[1]),
+                    color: [c[0], c[1], c[2]],
+                    enabled: true,
+                })
+                .collect(),
+        )
     });
 
-    let dpi_effect = read_register(&link, DPI_EFFECT_ADDR, 6).ok().flatten().map(|d| d[0] != 0);
-    let polling = read_register(&link, POLLING_ADDR, 2).ok().flatten().and_then(|d| match d[0] {
-        0x01 => Some(1000), 0x02 => Some(500), 0x04 => Some(250), 0x08 => Some(125), _ => None,
-    });
+    let dpi_effect = read_register(&link, DPI_EFFECT_ADDR, 6)
+        .ok()
+        .flatten()
+        .map(|d| d[0] != 0);
+    let polling = read_register(&link, POLLING_ADDR, 2)
+        .ok()
+        .flatten()
+        .and_then(|d| match d[0] {
+            0x01 => Some(1000),
+            0x02 => Some(500),
+            0x04 => Some(250),
+            0x08 => Some(125),
+            _ => None,
+        });
     let buttons = read_buttons(&link);
 
-    MouseState { present: true, mode, led, dpi, dpi_effect, polling, buttons }
+    MouseState {
+        present: true,
+        mode,
+        led,
+        dpi,
+        dpi_effect,
+        polling,
+        buttons,
+    }
 }
 
 fn read_stage_table(link: &Link, base: u16) -> Option<Vec<[u8; 4]>> {
@@ -358,27 +413,41 @@ fn read_stage_table(link: &Link, base: u16) -> Option<Vec<[u8; 4]>> {
 fn read_buttons(link: &Link) -> Option<Vec<[u8; 3]>> {
     let mut out = Vec::new();
     for i in (0..BUTTON_COUNT).step_by(2) {
-        let d = read_register(link, BUTTON_ADDR + 4 * i as u16, 8).ok().flatten()?;
+        let d = read_register(link, BUTTON_ADDR + 4 * i as u16, 8)
+            .ok()
+            .flatten()?;
         out.push([d[0], d[1], d[2]]);
         out.push([d[4], d[5], d[6]]);
     }
     Some(out)
 }
 
-pub fn set_led(api: &HidApi, effect: &str, r: u8, g: u8, b: u8, speed: u8, brightness: u8) -> Result<()> {
+pub fn set_led(
+    api: &HidApi,
+    effect: &str,
+    r: u8,
+    g: u8,
+    b: u8,
+    speed: u8,
+    brightness: u8,
+) -> Result<()> {
     let p = build_led(effect_id(effect), r, g, b, speed, brightness);
     apply_all(api, &[p])
 }
 
 pub fn set_dpi_stage(api: &HidApi, stage: usize, x: u32, y: u32) -> Result<()> {
-    if stage < 1 || stage > DPI_STAGES {
+    if !(1..=DPI_STAGES).contains(&stage) {
         return Err(DevError::Invalid("estágio deve ser 1..5".into()));
     }
     // Preserve the other stages: read the current bytes first (or fall back).
     let mut axes = read_link(api)
         .ok()
         .and_then(|l| read_stage_table(&l, DPI_ADDR))
-        .unwrap_or_else(|| (0..DPI_STAGES).map(|_| [dpi_to_byte(x), dpi_to_byte(y), 0, 0]).collect());
+        .unwrap_or_else(|| {
+            (0..DPI_STAGES)
+                .map(|_| [dpi_to_byte(x), dpi_to_byte(y), 0, 0])
+                .collect()
+        });
     axes[stage - 1] = [dpi_to_byte(x), dpi_to_byte(y), 0, 0];
     apply_all(api, &stage_table_packets(DPI_ADDR, &axes))
 }
@@ -390,7 +459,7 @@ pub fn set_dpi_all(api: &HidApi, dpi: u32) -> Result<()> {
 }
 
 pub fn set_dpi_color(api: &HidApi, stage: usize, r: u8, g: u8, b: u8) -> Result<()> {
-    if stage < 1 || stage > DPI_STAGES {
+    if !(1..=DPI_STAGES).contains(&stage) {
         return Err(DevError::Invalid("estágio deve ser 1..5".into()));
     }
     let mut cols = read_link(api)
@@ -417,7 +486,9 @@ fn stage_table_packets(base: u16, entries: &[[u8; 4]]) -> Vec<[u8; 17]> {
 pub fn set_dpi_effect(api: &HidApi, on: bool) -> Result<()> {
     let p = if on {
         // Preserve the two undecoded tail bytes when possible.
-        let tail = read_link(api).ok().and_then(|l| read_register(&l, DPI_EFFECT_ADDR, 6).ok().flatten());
+        let tail = read_link(api)
+            .ok()
+            .and_then(|l| read_register(&l, DPI_EFFECT_ADDR, 6).ok().flatten());
         let mut data = record(&[0x01]);
         if let Some(t) = tail {
             data.extend(record(&[t[2]]));
@@ -434,7 +505,15 @@ pub fn set_dpi_effect(api: &HidApi, on: bool) -> Result<()> {
 }
 
 pub fn set_polling(api: &HidApi, hz: u32) -> Result<()> {
-    let code: u8 = if hz >= 1000 { 0x01 } else if hz >= 500 { 0x02 } else if hz >= 250 { 0x04 } else { 0x08 };
+    let code: u8 = if hz >= 1000 {
+        0x01
+    } else if hz >= 500 {
+        0x02
+    } else if hz >= 250 {
+        0x04
+    } else {
+        0x08
+    };
     apply_all(api, &[build_write(POLLING_ADDR, &record(&[code]))])
 }
 

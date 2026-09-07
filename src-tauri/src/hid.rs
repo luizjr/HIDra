@@ -88,7 +88,11 @@ fn locate(api: &HidApi, dev: &'static Device) -> Option<Found> {
     // whole interface (Linux/macOS), which carries every collection.
     let write_path = on_config_page.or_else(|| on_interface.clone())?;
     let read_path = on_reply_page.or_else(|| Some(write_path.clone()))?;
-    Some(Found { device: dev, write_path, read_path })
+    Some(Found {
+        device: dev,
+        write_path,
+        read_path,
+    })
 }
 
 /// Every configuration endpoint of a device kind that is currently attached.

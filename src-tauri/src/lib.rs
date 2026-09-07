@@ -62,12 +62,22 @@ fn list_devices(app: State<App>) -> Presence {
 
 #[tauri::command]
 fn mouse_read_state(app: State<App>) -> mouse::MouseState {
-    with_api(&app, |api| mouse::read_state(api))
+    with_api(&app, mouse::read_state)
 }
 
 #[tauri::command]
-fn mouse_set_led(app: State<App>, effect: String, r: u8, g: u8, b: u8, speed: u8, brightness: u8) -> Result<()> {
-    with_api(&app, |api| mouse::set_led(api, &effect, r, g, b, speed, brightness))
+fn mouse_set_led(
+    app: State<App>,
+    effect: String,
+    r: u8,
+    g: u8,
+    b: u8,
+    speed: u8,
+    brightness: u8,
+) -> Result<()> {
+    with_api(&app, |api| {
+        mouse::set_led(api, &effect, r, g, b, speed, brightness)
+    })
 }
 
 #[tauri::command]
@@ -129,7 +139,9 @@ fn keyboard_set_effect(
     full_rgb: bool,
 ) -> Result<()> {
     with_api(&app, |api| {
-        keyboard::set_effect(api, profile, effect, r, g, b, brightness, speed, direction, full_rgb)
+        keyboard::set_effect(
+            api, profile, effect, r, g, b, brightness, speed, direction, full_rgb,
+        )
     })
 }
 
@@ -175,11 +187,15 @@ fn keyboard_remap(app: State<App>, index: usize, kind: String, code: u8, code2: 
 
 #[tauri::command]
 fn keyboard_restore_keymap(app: State<App>) -> Result<()> {
-    with_api(&app, |api| keyboard::restore_keymap(api))
+    with_api(&app, keyboard::restore_keymap)
 }
 
 #[tauri::command]
-fn keyboard_set_custom_colors(app: State<App>, profile: u8, cells: Vec<keyboard::CustomCell>) -> Result<()> {
+fn keyboard_set_custom_colors(
+    app: State<App>,
+    profile: u8,
+    cells: Vec<keyboard::CustomCell>,
+) -> Result<()> {
     with_api(&app, |api| keyboard::set_custom_colors(api, profile, cells))
 }
 
@@ -187,8 +203,14 @@ fn keyboard_set_custom_colors(app: State<App>, profile: u8, cells: Vec<keyboard:
 pub fn run() {
     let api = HidApi::new().expect("falha ao inicializar HIDAPI");
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::default().level(log::LevelFilter::Info).build())
-        .manage(App { api: Mutex::new(api) })
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .level(log::LevelFilter::Info)
+                .build(),
+        )
+        .manage(App {
+            api: Mutex::new(api),
+        })
         .invoke_handler(tauri::generate_handler![
             list_devices,
             mouse_read_state,

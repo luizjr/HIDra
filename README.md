@@ -46,10 +46,12 @@ Grab the installer for your system from the
 ### Linux — `.deb`, `.rpm` or AppImage
 
 ```sh
-sudo dpkg -i hidra_*_amd64.deb        # Debian / Ubuntu / Mint / Pop!_OS
-sudo rpm -i hidra-*.x86_64.rpm        # Fedora / openSUSE
+sudo dpkg -i HIDra_*_amd64.deb        # Debian / Ubuntu / Mint / Pop!_OS
+sudo rpm -i HIDra-*.x86_64.rpm        # Fedora / openSUSE
 chmod +x HIDra_*.AppImage && ./HIDra_*.AppImage
 ```
+
+The binary is `hidra`, so the app also runs from a terminal by that name.
 
 The `.deb` and `.rpm` install the udev rule themselves — just **replug the
 device** after installing. With the AppImage, or when running from source, add
