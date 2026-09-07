@@ -9,6 +9,7 @@
   <a href="https://github.com/luizjr/HIDra/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/luizjr/HIDra?display_name=tag"></a>
   <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
   <a href="https://github.com/luizjr/HIDra/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/luizjr/HIDra/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/luizjr/HIDra/releases/tag/nightly"><img alt="Nightly build" src="https://github.com/luizjr/HIDra/actions/workflows/nightly.yml/badge.svg"></a>
 </p>
 
 <p align="center"><a href="README.pt-BR.md">Leia em português 🇧🇷</a></p>
