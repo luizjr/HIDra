@@ -142,6 +142,10 @@ The keyboard protocol was reverse-engineered by capturing the official Windows
 tool's USB traffic; every byte of it is written down in
 [`PROTOCOL.md`](PROTOCOL.md) so nobody has to do that work twice.
 
+> The app's own interface is currently in Portuguese. Translating it is a
+> well-scoped first contribution — all user-facing strings live in the React
+> components under `src/`.
+
 ## Contributing
 
 Bug reports, new device entries, protocol captures and UI work are all welcome —
