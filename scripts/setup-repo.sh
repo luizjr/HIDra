@@ -42,4 +42,11 @@ gh repo edit "$REPO" \
     --add-topic reverse-engineering \
     --add-topic redragon
 
+# Labels the issue templates refer to; GitHub only ships its own defaults.
+echo "Ensuring labels…"
+gh label create device -R "$REPO" --color 1d76db \
+    --description "Support for a device HIDra does not know yet" 2>/dev/null || true
+gh label create protocol -R "$REPO" --color 5319e7 \
+    --description "USB/HID protocol capture or documentation" 2>/dev/null || true
+
 echo "Done. Check it: gh repo view $REPO --web"
