@@ -15,9 +15,10 @@ import {
   listDevices,
   mouseReadState,
 } from "./backend";
-import { useLocalStorage } from "./hooks";
+import { useLocalStorage, useUpdater } from "./hooks";
 import { ToastProvider, useToast } from "./components/Toast";
 import { Sidebar } from "./components/Sidebar";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { SegmentedControl } from "./components/ui/SegmentedControl";
 import { MousePanel } from "./components/mouse/MousePanel";
 import { KeyboardPanel } from "./components/keyboard/KeyboardPanel";
@@ -100,6 +101,8 @@ function AppShell() {
     return () => clearInterval(id);
   }, [refreshDevices]);
 
+  const updater = useUpdater();
+
   const mode = mouseState?.mode ?? devices.mouse_mode;
   const mouseApplied =
     mode === "wired" ? "Aplicado via cabo" : "Aplicado via 2.4G";
@@ -108,6 +111,9 @@ function AppShell() {
     <div className="app">
       <Sidebar
         devices={devices}
+        version={updater.version}
+        checking={updater.state.kind === "checking"}
+        onCheckUpdates={() => void updater.check(true)}
         selected={selected}
         onSelect={setSelected}
         profile={profile}
@@ -115,6 +121,13 @@ function AppShell() {
       />
 
       <main className="main">
+        <UpdateBanner
+          state={updater.state}
+          support={updater.support}
+          onInstall={(update) => void updater.install(update)}
+          onDismiss={updater.dismiss}
+        />
+
         <header className="topbar">
           <SegmentedControl<DeviceKind>
             value={selected}

@@ -14,6 +14,8 @@ pub enum DevError {
     NoResponse,
     #[error("{0}: este modelo usa um protocolo que ainda não foi implementado")]
     Unsupported(String),
+    #[error("atualização: {0}")]
+    Update(String),
     #[error("valor inválido: {0}")]
     Invalid(String),
 }

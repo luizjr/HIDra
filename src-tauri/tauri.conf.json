@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "HIDra",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "identifier": "io.github.luizjr.hidra",
   "build": {
     "frontendDist": "../dist",
@@ -57,6 +57,18 @@
           "/usr/lib/udev/rules.d/70-hidra.rules": "../packaging/70-hidra.rules"
         },
         "postInstallScript": "../packaging/deb-postinst.sh"
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM2RjA1QzA3RTk2OTc1RjcKUldUM2RXbnBCMXp3TmhnOWtiaUU5dmFLVXVnN1k2VVZnRmlvdlNTSm1iTzZVSjNyZ2d2S2tvdzcK",
+      "endpoints": [
+        "https://github.com/luizjr/HIDra/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }

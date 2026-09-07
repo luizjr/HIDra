@@ -121,6 +121,29 @@ Every push to `main` rebuilds all three installers and replaces the rolling
 Use it to try a fix before it is tagged; use the
 [latest release](https://github.com/luizjr/HIDra/releases/latest) otherwise.
 
+## Staying up to date
+
+HIDra checks for a new release a few seconds after it starts, and whenever you
+click **Procurar atualizações** in the sidebar. When one is out, a strip appears
+above the panels offering to install it.
+
+How it installs depends on how you installed HIDra:
+
+| Install | What happens |
+| --- | --- |
+| Windows, macOS, Linux AppImage | HIDra downloads the new build, verifies its signature and restarts into it |
+| Linux `.deb` / `.rpm` | HIDra downloads the signed package and hands it to `dpkg`/`rpm` through `pkexec`, so your system asks for authorisation the way it does for any package |
+| Built from source, or packaged by someone else | HIDra tells you a release is out and links to it; it never touches a build it did not make |
+
+Every artifact is signed with the project's release key, and the app refuses
+anything that does not verify — including the Linux packages, which carry their
+own `.sig` next to them on the release. Nightly builds are never offered as an
+update.
+
+The check is one HTTPS request to GitHub for the release metadata. There is no
+telemetry, no account, and nothing is sent about you or your hardware.
+
+
 ## What it does
 
 **Mice (Cobra Pro family)**

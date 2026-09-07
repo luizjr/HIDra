@@ -116,9 +116,45 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signs the updater artifacts and latest.json. The app refuses any
+          # update that does not verify against the matching public key.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
+          includeUpdaterJson: true
           args: ${{ matrix.args }}
+
+      # A .deb or .rpm cannot be swapped in by the updater plugin — the package
+      # manager owns those files. HIDra installs them through pkexec instead and
+      # verifies them first, so their .sig has to reach the release; latest.json
+      # does not mention them.
+      - name: Publish the Linux package signatures
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          shopt -s nullglob
+          packages=(src-tauri/target/release/bundle/deb/*.deb src-tauri/target/release/bundle/rpm/*.rpm)
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "no .deb or .rpm was produced" >&2
+            exit 1
+          fi
+          for package in "${packages[@]}"; do
+            # The bundler already signs these when createUpdaterArtifacts is on;
+            # sign only if that ever stops being true.
+            if [ ! -f "$package.sig" ]; then
+              npx tauri signer sign \
+                -f "$TAURI_SIGNING_PRIVATE_KEY" \
+                -p "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" \
+                "$package"
+            fi
+            gh release upload "$TAG" "$package.sig" --clobber
+          done
+        shell: bash
 
   publish:
     name: Publish the release

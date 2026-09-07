@@ -1,6 +1,6 @@
 [package]
 name = "hidra"
-version = "0.1.1"
+version = "0.1.2"
 description = "Open-source configurator for gaming mice and keyboards over raw HID"
 authors = ["HIDra contributors"]
 license = "GPL-3.0-or-later"
@@ -27,6 +27,11 @@ thiserror = "2"
 log = "0.4"
 env_logger = "0.11"
 parking_lot = "0.12"
+tauri-plugin-updater = "2.11.0"
+tauri-plugin-process = "2.3.1"
+minisign-verify = "0.2.5"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+base64 = "0.22"
 
 [profile.release]
 opt-level = "s"

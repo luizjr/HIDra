@@ -72,3 +72,8 @@ jobs:
 
       - name: clippy
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      # Covers the updater's signature checking and that the public key in
+      # tauri.conf.json matches the one compiled into the binary.
+      - name: tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml

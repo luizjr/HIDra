@@ -114,6 +114,28 @@ Todo push na `main` recompila os três instaladores e substitui a
 Use-a para testar uma correção antes de virar versão; fora isso, use a
 [última release](https://github.com/luizjr/HIDra/releases/latest).
 
+## Mantendo atualizado
+
+O HIDra procura uma nova versão alguns segundos depois de abrir, e sempre que
+você clica em **Procurar atualizações** na barra lateral. Quando há uma, aparece
+uma faixa acima dos painéis oferecendo a instalação.
+
+Como ele instala depende de como você instalou:
+
+| Instalação | O que acontece |
+| --- | --- |
+| Windows, macOS, AppImage no Linux | O HIDra baixa a nova versão, confere a assinatura e reinicia já nela |
+| `.deb` / `.rpm` no Linux | O HIDra baixa o pacote assinado e entrega ao `dpkg`/`rpm` via `pkexec`, então o sistema pede autorização como pediria para qualquer pacote |
+| Compilado do código, ou empacotado por terceiros | O HIDra avisa que saiu uma versão e leva até ela; nunca mexe numa instalação que não foi ele que fez |
+
+Todo artefato é assinado com a chave de release do projeto, e o app recusa o que
+não conferir — inclusive os pacotes Linux, que têm o próprio `.sig` ao lado
+deles na release. Versões nightly nunca são oferecidas como atualização.
+
+A verificação é uma requisição HTTPS ao GitHub pedindo os dados da release. Não
+há telemetria, não há conta, e nada sobre você ou seu hardware é enviado.
+
+
 ## O que ele faz
 
 **Mouses (família Cobra Pro)**

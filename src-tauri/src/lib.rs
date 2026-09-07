@@ -7,6 +7,7 @@ mod error;
 mod hid;
 mod keyboard;
 mod mouse;
+mod update;
 
 use error::Result;
 use hidapi::HidApi;
@@ -212,6 +213,11 @@ pub fn run() {
                 .level(log::LevelFilter::Info)
                 .build(),
         )
+        // In-app updates: the plugin handles Windows, macOS and the AppImage;
+        // `update.rs` handles .deb and .rpm. `process` is what relaunches the
+        // app once the plugin has swapped the binary.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(App {
             api: Mutex::new(api),
         })
@@ -239,6 +245,8 @@ pub fn run() {
             keyboard_remap,
             keyboard_restore_keymap,
             keyboard_set_custom_colors,
+            update::update_support,
+            update::install_linux_package,
         ])
         .run(tauri::generate_context!())
         .expect("erro ao executar a aplicação Tauri");

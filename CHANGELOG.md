@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2]
+
+### Added
+- **In-app updates.** HIDra checks for a new release on startup and on demand,
+  and installs it itself: through `tauri-plugin-updater` on Windows, macOS and
+  the Linux AppImage, and by handing the signed package to `dpkg`/`rpm` via
+  `pkexec` on a `.deb` or `.rpm` install. Every artifact — including the Linux
+  packages, which now ship a `.sig` — is verified against the project's release
+  key before anything is installed, and a build HIDra did not package is only
+  ever told about the release, never modified.
+- The sidebar shows the running version and a "Procurar atualizações" button.
+
 ## [0.1.1]
 
 ### Fixed
@@ -33,6 +45,7 @@ All notable changes to this project are documented here. The format follows
 - Byte-level protocol documentation for both devices in `PROTOCOL.md`.
 - Linux, Windows and macOS packages built by CI.
 
-[Unreleased]: https://github.com/luizjr/HIDra/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/luizjr/HIDra/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/luizjr/HIDra/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/luizjr/HIDra/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/luizjr/HIDra/releases/tag/v0.1.0

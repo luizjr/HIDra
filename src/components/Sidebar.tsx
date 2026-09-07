@@ -3,6 +3,9 @@ import { SegmentedControl } from "./ui/SegmentedControl";
 
 interface SidebarProps {
   devices: ListDevices;
+  version: string;
+  checking: boolean;
+  onCheckUpdates: () => void;
   selected: DeviceKind;
   onSelect: (kind: DeviceKind) => void;
   profile: Profile;
@@ -21,6 +24,9 @@ interface DeviceMeta {
 
 export function Sidebar({
   devices,
+  version,
+  checking,
+  onCheckUpdates,
   selected,
   onSelect,
   profile,
@@ -118,6 +124,17 @@ export function Sidebar({
         <span className="sidebar__hint">
           Configuração local via 2.4G / cabo
         </span>
+        <div className="sidebar__version">
+          <span>{version && version !== "dev" ? `v${version}` : ""}</span>
+          <button
+            type="button"
+            className="linkbtn"
+            onClick={onCheckUpdates}
+            disabled={checking}
+          >
+            {checking ? "Procurando…" : "Procurar atualizações"}
+          </button>
+        </div>
       </div>
     </aside>
   );
