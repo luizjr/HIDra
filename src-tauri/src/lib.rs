@@ -246,7 +246,6 @@ pub fn run() {
             keyboard_restore_keymap,
             keyboard_set_custom_colors,
             update::update_support,
-            update::install_linux_package,
         ])
         .run(tauri::generate_context!())
         .expect("erro ao executar a aplicação Tauri");

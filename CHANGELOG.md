@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3]
+
+### Changed
+- The Linux `.deb`/`.rpm` update path now goes through `tauri-plugin-updater`
+  instead of code of our own. The plugin already did exactly this — download,
+  verify against the release key, install with `pkexec dpkg -i` — and it knows
+  which format a copy was installed from because the bundler stamps that into
+  the binary, which is more reliable than asking `dpkg` who owns the running
+  executable. Three dependencies and the whole custom download-and-verify path
+  went with it.
+
 ## [0.1.2]
 
 ### Added
@@ -45,7 +56,8 @@ All notable changes to this project are documented here. The format follows
 - Byte-level protocol documentation for both devices in `PROTOCOL.md`.
 - Linux, Windows and macOS packages built by CI.
 
-[Unreleased]: https://github.com/luizjr/HIDra/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/luizjr/HIDra/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/luizjr/HIDra/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/luizjr/HIDra/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/luizjr/HIDra/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/luizjr/HIDra/releases/tag/v0.1.0

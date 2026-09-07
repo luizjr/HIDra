@@ -128,9 +128,9 @@ Como ele instala depende de como você instalou:
 | `.deb` / `.rpm` no Linux | O HIDra baixa o pacote assinado e entrega ao `dpkg`/`rpm` via `pkexec`, então o sistema pede autorização como pediria para qualquer pacote |
 | Compilado do código, ou empacotado por terceiros | O HIDra avisa que saiu uma versão e leva até ela; nunca mexe numa instalação que não foi ele que fez |
 
-Todo artefato é assinado com a chave de release do projeto, e o app recusa o que
-não conferir — inclusive os pacotes Linux, que têm o próprio `.sig` ao lado
-deles na release. Versões nightly nunca são oferecidas como atualização.
+Todo artefato é assinado com a chave de release do projeto, e o app confere o
+download com ela antes de instalar qualquer coisa — um arquivo adulterado é
+recusado, não instalado. Versões nightly nunca são oferecidas como atualização.
 
 A verificação é uma requisição HTTPS ao GitHub pedindo os dados da release. Não
 há telemetria, não há conta, e nada sobre você ou seu hardware é enviado.

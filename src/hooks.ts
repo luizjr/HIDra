@@ -109,7 +109,7 @@ export type UpdateState =
   | { kind: "error"; message: string };
 
 const NO_SUPPORT: UpdateSupport = {
-  install: "unknown",
+  bundle: null,
   can_install: false,
   asset_pattern: "",
 };
@@ -152,14 +152,14 @@ export function useUpdater() {
     async (update: AvailableUpdate) => {
       setState({ kind: "installing", progress: null });
       try {
-        await installUpdate(update, support, (progress) =>
+        await installUpdate(update, (progress) =>
           setState({ kind: "installing", progress }),
         );
       } catch (err) {
         setState({ kind: "error", message: String(err) });
       }
     },
-    [support],
+    [],
   );
 
   const dismiss = useCallback(() => setState({ kind: "idle" }), []);

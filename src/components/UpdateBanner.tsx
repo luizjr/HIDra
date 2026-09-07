@@ -94,9 +94,9 @@ export function UpdateBanner({
           className="btn btn--primary btn--sm"
           onClick={() => onInstall(update)}
           title={
-            support.install === "deb" || support.install === "rpm"
+            support.bundle === "deb" || support.bundle === "rpm"
               ? "Baixa o pacote assinado e instala pelo gerenciador do sistema"
-              : undefined
+              : "Baixa a nova versão assinada e reinicia o app"
           }
         >
           Atualizar agora

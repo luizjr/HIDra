@@ -1,10 +1,11 @@
 // In-app updates.
 //
-// Detection is the same everywhere: `tauri-plugin-updater` reads the signed
-// `latest.json` attached to the newest release. Installation is not, so the
-// backend says how this copy was installed and we pick the path from that:
-// the plugin can replace a Windows install, a macOS bundle or an AppImage,
-// while a .deb or .rpm has to go through the system package manager.
+// `tauri-plugin-updater` does the work: it reads the signed `latest.json` on
+// the newest release, verifies the artifact against the key in tauri.conf.json,
+// and installs it the way the format requires — in place for an AppImage or a
+// Windows install, through dpkg/rpm under a system authorisation prompt for a
+// Linux package. The backend only tells us whether this copy is one it can
+// install into at all, so a source build gets a download link instead.
 
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -14,10 +15,9 @@ import { isTauri } from "./backend";
 
 const RELEASES = "https://github.com/luizjr/HIDra/releases";
 
-export type InstallKind = "managed" | "deb" | "rpm" | "unknown";
-
 export interface UpdateSupport {
-  install: InstallKind;
+  /** Package format this copy came from, or null when HIDra did not package it. */
+  bundle: string | null;
   /** Whether HIDra can install an update itself on this system. */
   can_install: boolean;
   /** Release asset for this system, with `{version}` still to fill in. */
@@ -32,7 +32,7 @@ export interface AvailableUpdate {
 }
 
 const UNKNOWN: UpdateSupport = {
-  install: "unknown",
+  bundle: null,
   can_install: false,
   asset_pattern: "",
 };
@@ -75,25 +75,12 @@ export function downloadUrl(support: UpdateSupport, version: string): string {
 
 /**
  * Install an update and relaunch. `onProgress` receives 0..1 while downloading,
- * or null when the platform reports no size (the package-manager path).
+ * or null when the server sends no size to measure against.
  */
 export async function installUpdate(
   update: AvailableUpdate,
-  support: UpdateSupport,
   onProgress: (fraction: number | null) => void,
 ): Promise<void> {
-  if (support.install === "deb" || support.install === "rpm") {
-    // The backend downloads, checks the signature against the same key the
-    // plugin uses, and calls dpkg/rpm through pkexec — so the system asks for
-    // authorisation the way it would for any package.
-    onProgress(null);
-    await invoke("install_linux_package", {
-      url: downloadUrl(support, update.version),
-    });
-    await relaunch();
-    return;
-  }
-
   if (!update.handle) throw new Error("atualização indisponível neste formato");
 
   let total = 0;

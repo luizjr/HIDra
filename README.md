@@ -135,10 +135,9 @@ How it installs depends on how you installed HIDra:
 | Linux `.deb` / `.rpm` | HIDra downloads the signed package and hands it to `dpkg`/`rpm` through `pkexec`, so your system asks for authorisation the way it does for any package |
 | Built from source, or packaged by someone else | HIDra tells you a release is out and links to it; it never touches a build it did not make |
 
-Every artifact is signed with the project's release key, and the app refuses
-anything that does not verify — including the Linux packages, which carry their
-own `.sig` next to them on the release. Nightly builds are never offered as an
-update.
+Every artifact is signed with the project's release key, and the app verifies
+the download against it before installing anything — so a tampered file is
+refused rather than installed. Nightly builds are never offered as an update.
 
 The check is one HTTPS request to GitHub for the release metadata. There is no
 telemetry, no account, and nothing is sent about you or your hardware.
