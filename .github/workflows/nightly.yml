@@ -1,70 +1,72 @@
-name: Release
+name: Nightly (main)
 
-# Publishes installers for a version tag, automatically.
+# Continuous delivery from main: every code change on main rebuilds the
+# installers and replaces the rolling `nightly` pre-release, so there is always
+# a downloadable build of the current main branch:
 #
-#   git tag v0.2.0 && git push origin v0.2.0
+#   https://github.com/luizjr/HIDra/releases/tag/nightly
 #
-# The release is created, filled with the Linux/Windows/macOS bundles, and
-# published — no manual step. Re-running for the same tag replaces the release.
+# Documentation-only pushes are skipped — see the paths filter below.
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths:
+      - "src/**"
+      - "src-tauri/**"
+      - "packaging/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/nightly.yml"
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing tag to build and publish (e.g. v0.1.0)
-        required: true
 
 permissions:
   contents: write
 
-env:
-  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+concurrency:
+  group: nightly
+  cancel-in-progress: true
 
 jobs:
   create-release:
-    name: Create the release
+    name: Reset the nightly release
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create.outputs.result }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
 
-      # Building the same tag twice should replace its release, not pile new
-      # assets onto the old one.
-      - name: Drop any previous release for this tag
+      # The nightly release is a moving target: drop the old one (and its tag)
+      # so assets never accumulate across builds.
+      - name: Drop the previous nightly
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete "$TAG" --yes || true
+        run: gh release delete nightly --cleanup-tag --yes || true
 
-      - name: Create a draft release to upload into
+      - name: Create the nightly release for this commit
         id: create
         uses: actions/github-script@v7
         with:
           script: |
-            const tag = process.env.TAG;
+            const sha = context.sha.substring(0, 7);
             const body = [
-              'Installers for Linux, Windows and macOS are attached below.',
+              `Automatic build of \`main\` at ${sha}, replaced on every push.`,
               '',
-              '**Linux** — the `.deb` and `.rpm` install the udev rule for you, so just replug the device afterwards. AppImage users need the rule once: `sudo sh packaging/install-udev.sh` from a source checkout.',
+              'This is **not a stable release** — it is whatever main looks like right now. For a version that was tagged on purpose, use the [latest release](https://github.com/luizjr/HIDra/releases/latest).',
               '',
-              '**Windows** — the installer is unsigned: SmartScreen will ask, choose *More info → Run anyway*.',
-              '',
-              '**macOS** — the app is not notarized: first launch needs *right-click → Open*, or `xattr -dr com.apple.quarantine /Applications/HIDra.app`.',
-              '',
-              'See the [changelog](https://github.com/luizjr/HIDra/blob/main/CHANGELOG.md) for what changed.',
+              'Install notes are the same as a stable release: the Linux `.deb`/`.rpm` ship the udev rule, the Windows installer is unsigned (SmartScreen → *More info → Run anyway*), and the macOS app is not notarized (*right-click → Open*).',
             ].join('\n');
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: tag,
-              name: `HIDra ${tag}`,
+              tag_name: 'nightly',
+              target_commitish: context.sha,
+              name: `Nightly build (${sha})`,
               body,
               draft: true,
-              prerelease: false,
+              prerelease: true,
             });
             return release.data.id;
           result-encoding: string
@@ -88,8 +90,6 @@ jobs:
             args: "--target universal-apple-darwin"
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-22.04'
@@ -100,7 +100,6 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          # The universal macOS bundle links both slices, so both targets are needed.
           targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - uses: swatinem/rust-cache@v2
@@ -121,7 +120,7 @@ jobs:
           args: ${{ matrix.args }}
 
   publish:
-    name: Publish the release
+    name: Publish the nightly
     needs: [create-release, build]
     runs-on: ubuntu-latest
     steps:
@@ -133,5 +132,6 @@ jobs:
               repo: context.repo.repo,
               release_id: ${{ needs.create-release.outputs.release_id }},
               draft: false,
-              make_latest: 'true',
+              prerelease: true,
+              make_latest: 'false',
             });

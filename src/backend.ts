@@ -45,8 +45,10 @@ const mockDevices: ListDevices = {
   keyboard: true,
   mouse: true,
   mouse_mode: "2.4g",
-  keyboard_model: "Redragon Brahma Pro (K586RGB-PRO)",
-  mouse_model: "Redragon Cobra Pro (M711-PRO)",
+  keyboard_vendor: "Redragon",
+  keyboard_model: "Brahma Pro (K586RGB-PRO)",
+  mouse_vendor: "Redragon",
+  mouse_model: "Cobra Pro (M711-PRO)",
   keyboard_untested: false,
   mouse_untested: false,
 };

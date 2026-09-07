@@ -31,21 +31,11 @@
 }
 
 .brand__logo {
-  width: 26px;
-  height: 26px;
-  background: linear-gradient(145deg, var(--accent-hover), var(--accent));
-  transform: rotate(45deg);
-  border-radius: 6px;
-  box-shadow: 0 0 14px rgba(216, 31, 38, 0.55);
-  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   flex: none;
-}
-.brand__logo::after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 3px;
-  background: #0e0f12;
+  filter: drop-shadow(0 0 10px rgba(216, 31, 38, 0.4));
 }
 
 .brand__text {
@@ -317,6 +307,10 @@
 .tabgrid--single {
   grid-template-columns: minmax(0, 1fr);
   max-width: 760px;
+}
+/* A whole keyboard needs more room than a form: widen the preview column. */
+.tabgrid--kbd {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
 }
 .tabgrid--remap {
   grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1fr);
@@ -899,8 +893,12 @@
    =========================================================================== */
 
 .preview-stage--kbd {
+  /* Preview scale: the full board fits the column instead of scrolling. */
+  --u: 22px;
   overflow-x: auto;
-  justify-content: flex-start;
+  /* Centred when it fits, left-aligned when it has to scroll. */
+  justify-content: center;
+  justify-content: safe center;
   padding: 14px 4px;
 }
 .kbd {
@@ -1114,7 +1112,11 @@
     grid-template-columns: 208px 1fr;
   }
   .tabgrid,
-  .tabgrid--remap {
+  /* A whole keyboard needs more room than a form: widen the preview column. */
+.tabgrid--kbd {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+}
+.tabgrid--remap {
     grid-template-columns: minmax(0, 1fr);
   }
   .workspace__body {
@@ -1137,6 +1139,7 @@
 }
 .kbd-key {
   position: absolute;
+  overflow: hidden;
   padding: 0;
   margin: 0;
   border: 1px solid rgba(0, 0, 0, 0.55);
@@ -1156,6 +1159,10 @@
 .kbd-key span {
   pointer-events: none;
   white-space: nowrap;
+  /* Narrow keys (the numpad, the nav cluster) must clip their caption instead
+     of spilling it over their neighbours. */
+  overflow: hidden;
+  max-width: 100%;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
 }
 .kbd-key:hover {

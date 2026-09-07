@@ -11,8 +11,10 @@ export interface ListDevices {
   keyboard: boolean;
   mouse: boolean;
   mouse_mode: MouseMode | null;
-  /** Vendor + model of what was found, from the backend device table. */
+  /** What was found, from the backend device table. */
+  keyboard_vendor: string | null;
   keyboard_model: string | null;
+  mouse_vendor: string | null;
   mouse_model: string | null;
   /** Set when the model was added to the table but never proven on hardware. */
   keyboard_untested: boolean;

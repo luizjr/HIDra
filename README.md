@@ -23,6 +23,16 @@ of operating system.
 > Not affiliated with, endorsed by, or sponsored by any hardware manufacturer.
 > Product names are used only to say which hardware is supported.
 
+## Screenshots
+
+| Mouse | Keyboard |
+| --- | --- |
+| ![Mouse lighting, DPI and buttons](docs/screenshots/mouse.png) | ![Keyboard lighting effects](docs/screenshots/keyboard.png) |
+
+Per-key colours, painted key by key and stored on the keyboard itself:
+
+![Per-key colour editor](docs/screenshots/perkey.png)
+
 ## Supported devices
 
 | Device | USB ID | Status | Features |
@@ -83,6 +93,13 @@ xattr -dr com.apple.quarantine /Applications/HIDra.app
 > Linux. If something misbehaves there, please
 > [open an issue](https://github.com/luizjr/HIDra/issues/new/choose) — that
 > feedback is exactly what those builds need.
+
+### Development builds
+
+Every push to `main` rebuilds all three installers and replaces the rolling
+[`nightly` pre-release](https://github.com/luizjr/HIDra/releases/tag/nightly).
+Use it to try a fix before it is tagged; use the
+[latest release](https://github.com/luizjr/HIDra/releases/latest) otherwise.
 
 ## What it does
 

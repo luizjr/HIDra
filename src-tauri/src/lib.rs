@@ -31,9 +31,11 @@ struct Presence {
     keyboard: bool,
     mouse: bool,
     mouse_mode: Option<String>,
-    /// Model names of what was actually found, straight from the device table,
-    /// so the UI names the hardware instead of hardcoding one model.
+    /// What was actually found, straight from the device table, so the UI names
+    /// the hardware instead of hardcoding one model.
+    keyboard_vendor: Option<String>,
     keyboard_model: Option<String>,
+    mouse_vendor: Option<String>,
     mouse_model: Option<String>,
     /// True when the model was added to the table from a capture but never
     /// confirmed on hardware — the UI warns about it.
@@ -52,8 +54,10 @@ fn list_devices(app: State<App>) -> Presence {
             mouse_mode: m.as_ref().map(|f| f.connection().to_string()),
             keyboard_untested: kb.as_ref().is_some_and(|f| f.untested()),
             mouse_untested: m.as_ref().is_some_and(|f| f.untested()),
-            keyboard_model: kb.map(|f| f.full_name()),
-            mouse_model: m.map(|f| f.full_name()),
+            keyboard_vendor: kb.as_ref().map(|f| f.device.vendor.to_string()),
+            keyboard_model: kb.map(|f| f.device.model.to_string()),
+            mouse_vendor: m.as_ref().map(|f| f.device.vendor.to_string()),
+            mouse_model: m.map(|f| f.device.model.to_string()),
         }
     })
 }

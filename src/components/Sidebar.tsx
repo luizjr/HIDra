@@ -13,6 +13,7 @@ interface DeviceMeta {
   kind: DeviceKind;
   name: string;
   model: string;
+  vendor: string | null;
   connected: boolean;
   untested: boolean;
   mode?: string;
@@ -30,6 +31,7 @@ export function Sidebar({
       kind: "mouse",
       name: "Mouse",
       model: devices.mouse_model ?? "Nenhum compatível",
+      vendor: devices.mouse_vendor,
       connected: devices.mouse,
       untested: devices.mouse_untested,
       mode:
@@ -43,6 +45,7 @@ export function Sidebar({
       kind: "keyboard",
       name: "Teclado",
       model: devices.keyboard_model ?? "Nenhum compatível",
+      vendor: devices.keyboard_vendor,
       connected: devices.keyboard,
       untested: devices.keyboard_untested,
     },
@@ -51,7 +54,7 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="brand">
-        <span className="brand__logo" aria-hidden="true" />
+        <img className="brand__logo" src="/favicon.svg" alt="" aria-hidden="true" />
         <div className="brand__text">
           <strong>HIDra</strong>
           <span>CONFIG</span>
@@ -72,7 +75,12 @@ export function Sidebar({
               />
               <span className="device__info">
                 <span className="device__name">{item.name}</span>
-                <span className="device__model">{item.model}</span>
+                <span
+                  className="device__model"
+                  title={[item.vendor, item.model].filter(Boolean).join(" ")}
+                >
+                  {item.model}
+                </span>
               </span>
               {item.untested && item.connected && (
                 <span

@@ -26,7 +26,9 @@ const EMPTY_DEVICES: ListDevices = {
   keyboard: false,
   mouse: false,
   mouse_mode: null,
+  keyboard_vendor: null,
   keyboard_model: null,
+  mouse_vendor: null,
   mouse_model: null,
   keyboard_untested: false,
   mouse_untested: false,
@@ -36,8 +38,8 @@ function AppShell() {
   const notify = useToast();
 
   const [devices, setDevices] = useState<ListDevices>(EMPTY_DEVICES);
-  const [selected, setSelected] = useLocalStorage<DeviceKind>("rdo.device", "mouse");
-  const [profile, setProfile] = useLocalStorage<Profile>("rdo.profile", 1);
+  const [selected, setSelected] = useLocalStorage<DeviceKind>("hidra.device", "mouse");
+  const [profile, setProfile] = useLocalStorage<Profile>("hidra.profile", 1);
 
   const [mouseState, setMouseState] = useState<MouseState | null>(null);
   const [keyboardState, setKeyboardState] = useState<KeyboardState | null>(null);
@@ -133,6 +135,7 @@ function AppShell() {
         {selected === "mouse" ? (
           <MousePanel
             state={mouseState}
+            name={devices.mouse_model ?? "Mouse"}
             present={devices.mouse}
             applied={mouseApplied}
             onApplied={loadMouse}
@@ -140,6 +143,7 @@ function AppShell() {
         ) : (
           <KeyboardPanel
             state={keyboardState}
+            name={devices.keyboard_model ?? "Teclado"}
             effects={effects}
             present={devices.keyboard}
             profile={profile}

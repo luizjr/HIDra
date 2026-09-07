@@ -17,6 +17,16 @@ funcionando independente do sistema que você usa.
 > Não é afiliado, endossado nem patrocinado por nenhum fabricante. Os nomes de
 > produtos aparecem apenas para dizer qual hardware é compatível.
 
+## Telas
+
+| Mouse | Teclado |
+| --- | --- |
+| ![Iluminação, DPI e botões do mouse](docs/screenshots/mouse.png) | ![Efeitos de iluminação do teclado](docs/screenshots/keyboard.png) |
+
+Cores por tecla, pintadas uma a uma e gravadas no próprio teclado:
+
+![Editor de cores por tecla](docs/screenshots/perkey.png)
+
 ## Dispositivos compatíveis
 
 | Dispositivo | ID USB | Situação | Recursos |
@@ -77,6 +87,13 @@ xattr -dr com.apple.quarantine /Applications/HIDra.app
 > As versões de Windows e macOS saem do CI, mas foram muito menos testadas que a
 > de Linux. Se algo não funcionar,
 > [abra uma issue](https://github.com/luizjr/HIDra/issues/new/choose).
+
+### Versões de desenvolvimento
+
+Todo push na `main` recompila os três instaladores e substitui a
+[pré-release `nightly`](https://github.com/luizjr/HIDra/releases/tag/nightly).
+Use-a para testar uma correção antes de virar versão; fora isso, use a
+[última release](https://github.com/luizjr/HIDra/releases/latest).
 
 ## O que ele faz
 

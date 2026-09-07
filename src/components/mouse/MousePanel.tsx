@@ -18,19 +18,21 @@ const TABS: TabItem<MouseTab>[] = [
 
 interface MousePanelProps {
   state: MouseState | null;
+  /** Model of the mouse that was found, or a generic label when none is. */
+  name: string;
   present: boolean;
   applied: string;
   onApplied: () => void;
 }
 
-export function MousePanel({ state, present, applied, onApplied }: MousePanelProps) {
-  const [tab, setTab] = useLocalStorage<MouseTab>("rdo.mouseTab", "led");
+export function MousePanel({ state, name, present, applied, onApplied }: MousePanelProps) {
+  const [tab, setTab] = useLocalStorage<MouseTab>("hidra.mouseTab", "led");
 
   return (
     <div className="workspace">
       <div className="workspace__top">
         <div className="workspace__heading">
-          <h1>Cobra Pro</h1>
+          <h1>{name}</h1>
           <span className={`chip${present ? " chip--on" : " chip--off"}`}>
             {present ? "Conectado" : "Desconectado"}
           </span>

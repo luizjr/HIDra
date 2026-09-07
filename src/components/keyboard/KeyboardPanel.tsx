@@ -19,6 +19,8 @@ const TABS: TabItem<KeyboardTab>[] = [
 interface KeyboardPanelProps {
   state: KeyboardState | null;
   effects: KeyboardEffect[];
+  /** Model of the keyboard that was found, or a generic label when none is. */
+  name: string;
   present: boolean;
   profile: Profile;
   onProfile: (profile: Profile) => void;
@@ -29,19 +31,20 @@ interface KeyboardPanelProps {
 export function KeyboardPanel({
   state,
   effects,
+  name,
   present,
   profile,
   onProfile,
   applied,
   onApplied,
 }: KeyboardPanelProps) {
-  const [tab, setTab] = useLocalStorage<KeyboardTab>("rdo.keyboardTab", "led");
+  const [tab, setTab] = useLocalStorage<KeyboardTab>("hidra.keyboardTab", "led");
 
   return (
     <div className="workspace">
       <div className="workspace__top">
         <div className="workspace__heading">
-          <h1>Brahma Pro</h1>
+          <h1>{name}</h1>
           <span className="chip chip--muted">Perfil {profile}</span>
           <span className={`chip${present ? " chip--on" : " chip--off"}`}>
             {present ? "Conectado" : "Desconectado"}

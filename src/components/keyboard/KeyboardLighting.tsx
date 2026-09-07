@@ -95,7 +95,7 @@ export function KeyboardLighting({
   };
 
   return (
-    <div className="tabgrid">
+    <div className="tabgrid tabgrid--kbd">
       <Panel
         title="Iluminação"
         subtitle={`Efeito de luz do Perfil ${profile}`}
