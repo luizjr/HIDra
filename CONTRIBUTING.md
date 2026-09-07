@@ -54,6 +54,23 @@ CI runs the same four on Linux, Windows and macOS.
   read back correctly" is worth more than any amount of review.
 - Comments explain *why*, not *what*. Match the surrounding code.
 
+## Cutting a release (maintainers)
+
+```sh
+sh scripts/bump-version.sh 0.2.0     # package.json + tauri.conf.json + Cargo.toml
+# write the CHANGELOG.md entry for 0.2.0
+git commit -am "Release 0.2.0" && git push
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+Pushing the tag is the whole release: CI builds Linux, Windows and macOS,
+uploads every installer, and publishes the release. Nothing is done by hand, and
+re-running a tag replaces its release instead of duplicating assets. Pushing to
+`main` separately refreshes the rolling `nightly` pre-release.
+
+Repository settings that cannot live in the repo (description, topics, enabled
+features) are in `scripts/setup-repo.sh`.
+
 ## Safety
 
 HIDra only ever writes to a device's configuration registers — the same ones the
