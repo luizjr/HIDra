@@ -376,28 +376,30 @@
             </tr>
           </thead>
           <tbody>
+            <!-- devices:start -->
             <tr>
-              <td>Redragon Cobra Pro / M711-PRO <span class="size" data-en>(2.4 GHz receiver)</span><span class="size" data-pt>(receptor 2.4 GHz)</span></td>
+              <td>Redragon Cobra Pro (M711-PRO) <span class="size" data-en>— 2.4 GHz receiver</span><span class="size" data-pt>— receptor 2.4 GHz</span></td>
               <td><code>25A7:FA07</code></td>
               <td><span class="tag tag--ok" data-en>verified</span><span class="tag tag--ok" data-pt>validado</span></td>
             </tr>
             <tr>
-              <td>Redragon Cobra Pro / M711-PRO <span class="size" data-en>(cable)</span><span class="size" data-pt>(cabo)</span></td>
+              <td>Redragon Cobra Pro (M711-PRO) <span class="size" data-en>— cable</span><span class="size" data-pt>— cabo</span></td>
               <td><code>25A7:FA08</code></td>
               <td><span class="tag tag--ok" data-en>verified</span><span class="tag tag--ok" data-pt>validado</span></td>
             </tr>
             <tr>
-              <td>Redragon Brahma Pro / K586RGB-PRO</td>
+              <td>Redragon Brahma Pro (K586RGB-PRO)</td>
               <td><code>0C45:5004</code></td>
               <td><span class="tag tag--ok" data-en>verified</span><span class="tag tag--ok" data-pt>validado</span></td>
             </tr>
+            <!-- devices:end -->
           </tbody>
         </table>
       </div>
       <div class="note" style="background:var(--bg-soft);border-color:var(--border)">
         <p>
-          <span data-en><b>Your device is not listed?</b> Peripherals are often the same board sold under several names, speaking the same protocol — adding one is frequently a single line in the device table. There is a <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">step-by-step guide</a>, and if you would rather not touch code, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">open a device request</a> with the output of <code>lsusb</code>.</span>
-          <span data-pt><b>Seu aparelho não está na lista?</b> Periféricos costumam ser a mesma placa vendida com nomes diferentes, falando o mesmo protocolo — adicionar um é, muitas vezes, uma linha na tabela de dispositivos. Existe um <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">guia passo a passo</a> e, se você preferir não mexer em código, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">abra um pedido de dispositivo</a> com a saída do <code>lsusb</code>.</span>
+          <span data-en><b>Your device is not listed?</b> HIDra is not a Redragon project — any brand belongs in that table, and peripherals are often the same board sold under several names, speaking a protocol HIDra already knows. <code>python3 scripts/probe-device.py</code> works out the numbers and prints the entry to paste; the <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">step-by-step guide</a> covers the rest. If you would rather not touch code, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">open a device request</a> with the output of <code>python3 scripts/probe-device.py --issue</code>.</span>
+          <span data-pt><b>Seu aparelho não está na lista?</b> O HIDra não é um projeto Redragon — qualquer marca cabe nessa tabela, e periféricos costumam ser a mesma placa vendida com nomes diferentes, falando um protocolo que o HIDra já conhece. O <code>python3 scripts/probe-device.py</code> descobre os números e imprime a entrada para colar; o <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.pt-BR.md">guia passo a passo</a> cobre o resto. Se preferir não mexer em código, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">abra um pedido de dispositivo</a> com a saída de <code>python3 scripts/probe-device.py --issue</code>.</span>
         </p>
       </div>
     </div>

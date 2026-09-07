@@ -31,15 +31,15 @@ body:
     attributes:
       label: Report descriptor (Linux, optional but very helpful)
       description: |
-        Run this and paste the output — it shows where the configuration
-        endpoint lives, which is the hard part.
+        Clone the repository and run `python3 scripts/probe-device.py --issue`
+        with the device plugged in, then paste the output here. It finds the
+        configuration endpoint for you, which is the hard part.
       value: |
-        <details><summary>report descriptors</summary>
+        <details><summary>probe-device.py output</summary>
 
         ```
         # paste the output of:
-        # for n in /sys/class/hidraw/hidraw*; do echo "== $n"; grep HID_ $n/device/uevent; \
-        #   xxd $n/device/report_descriptor | head -20; done
+        # python3 scripts/probe-device.py --issue
         ```
 
         </details>

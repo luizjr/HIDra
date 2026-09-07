@@ -11,6 +11,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  devices:
+    name: Device table (generated files in sync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The udev rule, both README tables and the website table are generated
+      # from src-tauri/src/devices.rs. A device added without regenerating them
+      # would ship without Linux permissions and be invisible on the site.
+      - run: python3 scripts/sync-devices.py --check
+
   frontend:
     name: Frontend (lint + build)
     runs-on: ubuntu-22.04

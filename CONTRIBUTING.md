@@ -5,8 +5,11 @@ abandoned — every device someone adds makes that a little less true.
 
 ## Ways to help, roughly by value
 
-1. **Add a device.** See [docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md). If it
-   speaks a protocol we already implement, it is one line.
+1. **Add a device.** See [docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md)
+   ([em português](docs/ADDING-DEVICES.pt-BR.md)). If it speaks a protocol we
+   already implement, it is one entry in a table — `scripts/probe-device.py`
+   works out the numbers for you and prints the entry. HIDra is not a Redragon
+   project: any brand belongs in that table.
 2. **Capture a protocol** for a device we cannot talk to yet, and write it down
    in `PROTOCOL.md` — even without code, that is a real contribution.
 3. **Test the Windows and macOS builds.** They are produced by CI and barely
@@ -39,9 +42,20 @@ npm run lint                                  # oxlint
 npm run build                                 # tsc + vite
 cargo fmt --manifest-path src-tauri/Cargo.toml
 cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+python3 scripts/sync-devices.py --check       # generated files match devices.rs
 ```
 
-CI runs the same four on Linux, Windows and macOS.
+CI runs the same on Linux, Windows and macOS.
+
+## Working with an AI assistant
+
+[`CLAUDE.md`](CLAUDE.md) is the instruction file for AI coding assistants —
+architecture, invariants and the device-adding recipe — and
+[`AGENTS.md`](AGENTS.md) points other tools at it. Claude Code users get a
+ready-made `/add-device` command that runs the whole flow.
+
+Agent-written pull requests are welcome on the same terms as any other: the
+hardware test in the description has to come from a person who owns the device.
 
 ## House style
 

@@ -36,18 +36,30 @@ Cores por tecla, pintadas uma a uma e gravadas no próprio teclado:
 
 ## Dispositivos compatíveis
 
+<!-- devices:start -->
 | Dispositivo | ID USB | Situação | Recursos |
 | --- | --- | --- | --- |
-| Redragon Cobra Pro / M711-PRO (receptor 2.4 GHz) | `25A7:FA07` | ✅ validado | iluminação, DPI, botões, polling |
-| Redragon Cobra Pro / M711-PRO (cabo) | `25A7:FA08` | ✅ validado | iluminação, DPI, botões, polling |
-| Redragon Brahma Pro / K586RGB-PRO | `0C45:5004` | ✅ validado | 18 efeitos + cor por tecla, 3 perfis, remapeamento |
+| Redragon Cobra Pro (M711-PRO) — receptor 2.4 GHz | `25A7:FA07` | ✅ validado | iluminação, DPI, botões, polling |
+| Redragon Cobra Pro (M711-PRO) — cabo | `25A7:FA08` | ✅ validado | iluminação, DPI, botões, polling |
+| Redragon Brahma Pro (K586RGB-PRO) | `0C45:5004` | ✅ validado | 18 efeitos + cor por tecla, 3 perfis, remapeamento |
+<!-- devices:end -->
 
-**Seu aparelho não está aí?** Muitos periféricos são o mesmo hardware com outro
-nome e falam exatamente o mesmo protocolo — adicionar costuma ser **uma linha**
-em [`src-tauri/src/devices.rs`](src-tauri/src/devices.rs). Veja
-[docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md) ou abra um
+**Seu aparelho não está aí?** O HIDra não é um projeto Redragon — ele começou
+com esses dois porque eram os que estavam na mesa do autor. Qualquer marca cabe
+na tabela, e muitos periféricos são o mesmo hardware com outro nome, falando um
+protocolo que o HIDra já conhece; adicionar costuma ser **uma entrada** em
+[`src-tauri/src/devices.rs`](src-tauri/src/devices.rs):
+
+```sh
+python3 scripts/probe-device.py     # acha o canal de config e imprime a entrada
+python3 scripts/sync-devices.py     # regera regra udev, tabelas e site
+```
+
+O passo a passo completo está em
+[docs/ADDING-DEVICES.pt-BR.md](docs/ADDING-DEVICES.pt-BR.md). Se preferir não
+mexer em código, abra um
 [pedido de dispositivo](https://github.com/luizjr/HIDra/issues/new?template=device-request.yml)
-com a saída do `lsusb`.
+com a saída de `python3 scripts/probe-device.py --issue`.
 
 ## Instalação
 
@@ -184,7 +196,13 @@ ninguém precise refazer esse trabalho.
 Relatos de bug, novos dispositivos, capturas de protocolo e melhorias de
 interface são todos bem-vindos — veja [CONTRIBUTING.md](CONTRIBUTING.md). A
 contribuição mais valiosa é um dispositivo novo:
-[docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md) mostra o caminho.
+[docs/ADDING-DEVICES.pt-BR.md](docs/ADDING-DEVICES.pt-BR.md) mostra o caminho.
+
+Usa um assistente de IA? O [`CLAUDE.md`](CLAUDE.md) documenta a arquitetura e as
+regras do projeto para agentes (o [`AGENTS.md`](AGENTS.md) aponta as outras
+ferramentas para lá), e quem usa Claude Code tem o comando `/add-device`, que
+percorre o fluxo inteiro. O teste no hardware continua tendo de vir de uma
+pessoa que tem o aparelho.
 
 ## Créditos
 

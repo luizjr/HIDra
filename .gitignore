@@ -28,3 +28,7 @@ src-tauri/target
 
 # Local cargo overrides (e.g. building to /tmp on a small disk)
 src-tauri/.cargo/
+
+# Local Claude Code session state (project commands under .claude/commands are tracked)
+.claude/*
+!.claude/commands/

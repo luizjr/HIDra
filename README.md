@@ -43,18 +43,30 @@ Per-key colours, painted key by key and stored on the keyboard itself:
 
 ## Supported devices
 
+<!-- devices:start -->
 | Device | USB ID | Status | Features |
 | --- | --- | --- | --- |
-| Redragon Cobra Pro / M711-PRO (2.4 GHz receiver) | `25A7:FA07` | ✅ verified | lighting, DPI, buttons, polling |
-| Redragon Cobra Pro / M711-PRO (cable) | `25A7:FA08` | ✅ verified | lighting, DPI, buttons, polling |
-| Redragon Brahma Pro / K586RGB-PRO | `0C45:5004` | ✅ verified | 18 effects + per-key colour, 3 profiles, key remap |
+| Redragon Cobra Pro (M711-PRO) — 2.4 GHz receiver | `25A7:FA07` | ✅ verified | lighting, DPI, buttons, polling |
+| Redragon Cobra Pro (M711-PRO) — cable | `25A7:FA08` | ✅ verified | lighting, DPI, buttons, polling |
+| Redragon Brahma Pro (K586RGB-PRO) | `0C45:5004` | ✅ verified | 18 effects + per-key colour, 3 profiles, key remap |
+<!-- devices:end -->
 
-**Your device is not here?** Many peripherals are rebadged siblings that speak
-the exact same protocol — adding one is often a single line in
-[`src-tauri/src/devices.rs`](src-tauri/src/devices.rs). See
-[docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md), or open a
+**Your device is not here?** HIDra is not a Redragon project — it started with
+those two because they were on the author's desk. Any brand belongs in that
+table, and many peripherals are rebadged siblings that speak a protocol HIDra
+already knows, so adding one is often a single entry in
+[`src-tauri/src/devices.rs`](src-tauri/src/devices.rs):
+
+```sh
+python3 scripts/probe-device.py     # finds the config endpoint, prints the entry
+python3 scripts/sync-devices.py     # regenerates udev rules, tables, website
+```
+
+The full walkthrough is [docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md)
+([em português](docs/ADDING-DEVICES.pt-BR.md)). If you would rather not touch
+code, open a
 [device request](https://github.com/luizjr/HIDra/issues/new?template=device-request.yml)
-with the output of `lsusb`.
+with the output of `python3 scripts/probe-device.py --issue`.
 
 ## Install
 
@@ -194,6 +206,12 @@ tool's USB traffic; every byte of it is written down in
 Bug reports, new device entries, protocol captures and UI work are all welcome —
 see [CONTRIBUTING.md](CONTRIBUTING.md). The most valuable contribution is a new
 device: [docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md) walks through it.
+
+Working with an AI assistant? [`CLAUDE.md`](CLAUDE.md) documents the
+architecture and the invariants for agents ([`AGENTS.md`](AGENTS.md) points
+other tools at it), and Claude Code users get an `/add-device` command that runs
+the whole flow. The hardware test still has to come from a person who owns the
+device.
 
 ## Credits
 
