@@ -3,6 +3,10 @@
 <p align="center">
   Configure mouses e teclados gamer no <b>Linux, Windows e macOS</b> — falando
   direto com o hardware por HID, sem depender do programa do fabricante.
+  <br>
+  Compatível com o mouse <b>Redragon Cobra Pro (M711-PRO)</b> e o teclado
+  <b>Redragon Brahma Pro (K586RGB-PRO)</b>, cujos programas só existem para
+  Windows.
 </p>
 
 <p align="center">

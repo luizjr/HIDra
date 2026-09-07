@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HIDra — configure gaming mice and keyboards on any OS</title>
-<meta name="description" content="Open-source configurator for gaming mice and keyboards on Linux, Windows and macOS. RGB lighting, DPI, polling rate and key remapping over raw HID, with no vendor software.">
+<title>HIDra — Redragon Cobra Pro &amp; Brahma Pro on Linux, Windows, macOS</title>
+<meta name="description" content="Free, open-source app to configure the Redragon Cobra Pro (M711-PRO) mouse and Brahma Pro (K586RGB-PRO) keyboard on Linux, Windows and macOS: RGB lighting, DPI, polling rate and key remapping, with no vendor software. Not affiliated with Redragon.">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<meta property="og:title" content="HIDra">
-<meta property="og:description" content="Configure gaming mice and keyboards on Linux, Windows and macOS — no vendor software.">
+<meta property="og:title" content="HIDra — Redragon Cobra Pro &amp; Brahma Pro on Linux, Windows and macOS">
+<meta property="og:description" content="Configure the Redragon Cobra Pro (M711-PRO) mouse and Brahma Pro (K586RGB-PRO) keyboard on Linux, Windows and macOS — no vendor software.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://luizjr.github.io/HIDra/">
 <meta property="og:image" content="https://luizjr.github.io/HIDra/img/mouse.png">
@@ -182,6 +182,28 @@
   html[data-lang="pt"] p[data-pt] { display: block; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "HIDra",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Linux, Windows, macOS",
+  "url": "https://luizjr.github.io/HIDra/",
+  "downloadUrl": "https://github.com/luizjr/HIDra/releases/latest",
+  "codeRepository": "https://github.com/luizjr/HIDra",
+  "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Open-source configurator for the Redragon Cobra Pro (M711-PRO) mouse and Brahma Pro (K586RGB-PRO) keyboard on Linux, Windows and macOS. Not affiliated with Redragon.",
+  "featureList": [
+    "RGB lighting effects and per-key colours",
+    "DPI stages and polling rate",
+    "Button and key remapping",
+    "Onboard profiles"
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -375,6 +397,43 @@
           <span data-en><b>Your device is not listed?</b> Peripherals are often the same board sold under several names, speaking the same protocol — adding one is frequently a single line in the device table. There is a <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">step-by-step guide</a>, and if you would rather not touch code, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">open a device request</a> with the output of <code>lsusb</code>.</span>
           <span data-pt><b>Seu aparelho não está na lista?</b> Periféricos costumam ser a mesma placa vendida com nomes diferentes, falando o mesmo protocolo — adicionar um é, muitas vezes, uma linha na tabela de dispositivos. Existe um <a href="https://github.com/luizjr/HIDra/blob/main/docs/ADDING-DEVICES.md">guia passo a passo</a> e, se você preferir não mexer em código, <a href="https://github.com/luizjr/HIDra/issues/new?template=device-request.yml">abra um pedido de dispositivo</a> com a saída do <code>lsusb</code>.</span>
         </p>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="compat">
+    <div class="wrap">
+      <h2><span data-en>Redragon software for Linux and macOS</span><span data-pt>Programa da Redragon no Linux e no macOS</span></h2>
+      <div class="cards">
+        <div class="card">
+          <h3><span data-en>Is there official Redragon software for Linux?</span><span data-pt>Existe programa oficial da Redragon para Linux?</span></h3>
+          <p>
+            <span data-en>No. The tools for the Cobra Pro (M711-PRO) and the Brahma Pro (K586RGB-PRO) are Windows-only, one download per product. HIDra speaks the same USB protocol those tools speak, so the same settings work from Linux and macOS too.</span>
+            <span data-pt>Não. Os programas do Cobra Pro (M711-PRO) e do Brahma Pro (K586RGB-PRO) só existem para Windows, um download por produto. O HIDra fala o mesmo protocolo USB desses programas, então os mesmos ajustes funcionam também no Linux e no macOS.</span>
+          </p>
+        </div>
+        <div class="card">
+          <h3><span data-en>Do I need a driver?</span><span data-pt>Preciso de driver?</span></h3>
+          <p>
+            <span data-en>No. Your mouse and keyboard already work as plain HID devices; HIDra only writes to the vendor configuration channel. On Linux it installs one udev rule so your user can reach that channel without root.</span>
+            <span data-pt>Não. Seu mouse e teclado já funcionam como dispositivos HID comuns; o HIDra só escreve no canal de configuração do fabricante. No Linux ele instala uma regra udev para o seu usuário acessar esse canal sem root.</span>
+          </p>
+        </div>
+        <div class="card">
+          <h3><span data-en>Do the settings survive a reboot?</span><span data-pt>Os ajustes sobrevivem a reiniciar?</span></h3>
+          <p>
+            <span data-en>Yes. Lighting, DPI, profiles and remaps are stored in the device's own memory, so they hold after you close HIDra, reboot, or move the device to a computer that has never heard of it.</span>
+            <span data-pt>Sim. Iluminação, DPI, perfis e remapeamentos ficam na memória do próprio aparelho, então valem depois de fechar o HIDra, reiniciar ou levar o periférico para um computador que nunca ouviu falar dele.</span>
+          </p>
+        </div>
+        <div class="card">
+          <h3><span data-en>Can it break my device?</span><span data-pt>Pode danificar meu aparelho?</span></h3>
+          <p>
+            <span data-en>HIDra writes only to configuration registers — the same ones the vendor tool writes. It never touches firmware, and every panel has a restore-defaults button.</span>
+            <span data-pt>O HIDra escreve apenas em registradores de configuração — os mesmos que o programa oficial escreve. Ele nunca mexe no firmware, e todo painel tem um botão de restaurar o padrão.</span>
+          </p>
+        </div>
       </div>
     </div>
   </section>

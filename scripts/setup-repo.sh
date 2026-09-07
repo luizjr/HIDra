@@ -16,7 +16,7 @@ command -v gh >/dev/null 2>&1 || {
     exit 1
 }
 
-DESCRIPTION="Open-source configurator for gaming mice and keyboards on Linux, Windows and macOS — RGB lighting, DPI, polling and key remapping over raw HID, no vendor software"
+DESCRIPTION="Configure the Redragon Cobra Pro (M711-PRO) mouse and Brahma Pro (K586RGB-PRO) keyboard on Linux, Windows and macOS — RGB lighting, DPI, polling and key remapping over raw HID, with no vendor software. Not affiliated with Redragon."
 
 echo "Setting description, homepage and features on $REPO…"
 gh repo edit "$REPO" \

@@ -3,6 +3,10 @@
 <p align="center">
   Configure gaming mice and keyboards from <b>Linux, Windows and macOS</b> —
   talking straight to the hardware over raw HID, with no vendor software.
+  <br>
+  Supports the <b>Redragon Cobra Pro (M711-PRO)</b> mouse and the
+  <b>Redragon Brahma Pro (K586RGB-PRO)</b> keyboard, whose own tools are
+  Windows-only.
 </p>
 
 <p align="center">
