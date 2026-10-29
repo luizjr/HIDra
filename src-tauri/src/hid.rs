@@ -136,6 +136,7 @@ pub fn open_speaking(api: &HidApi, kind: Kind, protocol: Protocol) -> Result<Lin
 /// An open link to a device, with helpers for the two packet dialects.
 pub struct Link {
     dev: HidDevice,
+    pub protocol: Protocol,
     /// Separate handle for replies when the device answers on another
     /// collection and the platform split them (Windows).
     reply: Option<HidDevice>,
@@ -151,7 +152,19 @@ impl Link {
             // read-back goes quiet.
             api.open_path(&found.read_path).ok()
         };
-        Ok(Link { dev, reply })
+        Ok(Link {
+            dev,
+            reply,
+            protocol: found.device.protocol,
+        })
+    }
+
+    pub fn output_write(&self, data: &[u8]) -> Result<()> {
+        let written = self.dev.write(data)?;
+        if written != data.len() {
+            return Err(DevError::Invalid("Incomplete HID output report".into()));
+        }
+        Ok(())
     }
 
     /// Handle the device answers on.
@@ -184,6 +197,16 @@ impl Link {
             }
         }
         Ok(None)
+    }
+
+    /// Feature transfers shared by protocols with variable-size packets.
+    pub fn feature_write(&self, data: &[u8]) -> Result<()> {
+        self.dev.send_feature_report(data)?;
+        Ok(())
+    }
+
+    pub fn feature_read(&self, data: &mut [u8]) -> Result<usize> {
+        Ok(self.dev.get_feature_report(data)?)
     }
 
     // ---- mouse dialect: 17-byte feature reports, reply as input report 0x09 ----

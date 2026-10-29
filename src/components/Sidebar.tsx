@@ -1,8 +1,11 @@
+import { Settings } from "./Settings";
+import { useTranslation } from "../i18n";
 import type { DeviceKind, ListDevices, Profile } from "../types";
 import { SegmentedControl } from "./ui/SegmentedControl";
 
 interface SidebarProps {
   devices: ListDevices;
+  lightingLocked?: boolean;
   version: string;
   checking: boolean;
   onCheckUpdates: () => void;
@@ -24,6 +27,7 @@ interface DeviceMeta {
 
 export function Sidebar({
   devices,
+  lightingLocked,
   version,
   checking,
   onCheckUpdates,
@@ -32,11 +36,12 @@ export function Sidebar({
   profile,
   onProfile,
 }: SidebarProps) {
+  const { t } = useTranslation();
   const items: DeviceMeta[] = [
     {
       kind: "mouse",
-      name: "Mouse",
-      model: devices.mouse_model ?? "Nenhum compatível",
+      name: t("Mouse"),
+      model: devices.mouse_model ?? t("Nenhum compatível"),
       vendor: devices.mouse_vendor,
       connected: devices.mouse,
       untested: devices.mouse_untested,
@@ -44,15 +49,16 @@ export function Sidebar({
         devices.mouse_mode === "2.4g"
           ? "2.4G"
           : devices.mouse_mode === "wired"
-            ? "Cabo"
+            ? t("Cabo")
             : undefined,
     },
     {
       kind: "keyboard",
-      name: "Teclado",
-      model: devices.keyboard_model ?? "Nenhum compatível",
+      name: t("Teclado"),
+      model: devices.keyboard_model ?? t("Nenhum compatível"),
       vendor: devices.keyboard_vendor,
       connected: devices.keyboard,
+      mode: devices.keyboard_mode === "2.4g" ? "2.4G" : devices.keyboard_mode === "wired" ? t("Cabo") : undefined,
       untested: devices.keyboard_untested,
     },
   ];
@@ -77,21 +83,21 @@ export function Sidebar({
             >
               <span
                 className={`device__dot${item.connected ? " is-on" : ""}`}
-                title={item.connected ? "Conectado" : "Ausente"}
+                title={item.connected ? t("Conectado") : t("Ausente")}
               />
               <span className="device__info">
-                <span className="device__name">{item.name}</span>
+                <span className="device__name">{t(item.name)}</span>
                 <span
                   className="device__model"
                   title={[item.vendor, item.model].filter(Boolean).join(" ")}
                 >
-                  {item.model}
+                  {t(item.model)}
                 </span>
               </span>
               {item.untested && item.connected && (
                 <span
                   className="device__mode device__mode--warn"
-                  title="Modelo adicionado pela comunidade e ainda não testado em hardware"
+                  title={t("Modelo adicionado pela comunidade e ainda não testado em hardware")}
                 >
                   ?
                 </span>
@@ -101,11 +107,12 @@ export function Sidebar({
               )}
             </button>
 
-            {item.kind === "keyboard" && selected === "keyboard" && (
+            {item.kind === "keyboard" && selected === "keyboard" && devices.keyboard_capabilities?.profiles !== 1 && (
               <div className="profilepick">
-                <span className="profilepick__label">Perfil</span>
+                <span className="profilepick__label">{t("Perfil")}</span>
                 <SegmentedControl<Profile>
                   size="sm"
+                  disabled={lightingLocked}
                   value={profile}
                   onChange={onProfile}
                   options={[
@@ -121,9 +128,9 @@ export function Sidebar({
       </nav>
 
       <div className="sidebar__foot">
+        <Settings />
         <span className="sidebar__hint">
-          Configuração local via 2.4G / cabo
-        </span>
+          {t("Configuração local via 2.4G / cabo")}</span>
         <div className="sidebar__version">
           <span>{version && version !== "dev" ? `v${version}` : ""}</span>
           <button
@@ -132,7 +139,7 @@ export function Sidebar({
             onClick={onCheckUpdates}
             disabled={checking}
           >
-            {checking ? "Procurando…" : "Procurar atualizações"}
+            {checking ? t("Procurando…") : t("Procurar atualizações")}
           </button>
         </div>
       </div>

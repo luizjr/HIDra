@@ -158,3 +158,269 @@ macro name is UTF-16. Per-event repeat counts and delays are supported.
 
 The recipe that produced the keyboard notes above, on Linux with no second
 machine, is written up in [docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md).
+
+## SinoWealth keyboard — Redragon UCAL K673SP-RGB-PRO (USB cable)
+
+This is a separate protocol from the SONiX Brahma above. The shared `258A:010C`
+USB ID alone is not a model identifier. Interface 1 exposes usage page FF00,
+usage 1, with a 519-byte feature payload on report ID 6 (520 bytes including
+report ID). Other vendor collections use IDs 3 and 5 and are not configuration
+channels for this driver.
+
+### Sources and identification
+
+- Official [K673SP download page](https://redragonshop.com/blogs/product-download/ucal-k673-pro-side-printed-pbt-keycaps),
+  package `Redragon_K673RGB-PRO_Setup_v2.0_20240910.exe`.
+- Model data from `Dev/kb/PRO-MAX/KB.ini`: `Psd=3,0,0,0,0,ba`, brightness
+  and speed 0–4, LedOpt1–18, and the 81 visible key rectangles/matrix slots.
+  The other `PRO` entry has identity ending in 73; it is **not** enabled.
+- Transport cross-checked against the [AULA capture notes](https://github.com/veysiemrah/aula-rgb-controller/blob/main/tools/protocol_notes.md)
+  and [DeetsRGB protocol documentation](https://github.com/deets-137/DeetsRGB/blob/main/docs/protocol.md).
+  Their model-specific effect maps must not be substituted for K673 data.
+
+The user's K673SP on Linux X11 returned model reply
+`06 82 01 00 01 00 06 00 03 00 00 00 00 BA` on 2026-10-25.
+Read-only queries also returned a 136-byte config reply ending in `5A A5`,
+and the complete 520-byte palette reply. These observations prove discovery
+and reads, not that a visual lighting change has been verified.
+
+### Framing and lighting
+
+Feature packets are `06 CMD ARG 00 01 00 LEN_LO LEN_HI DATA...`, zero-padded
+outbound to 520 bytes. A read first sends the query as SET_FEATURE, waits 50ms,
+and GET_FEATURE retrieves report 6. Validate the returned byte count and the
+entire eight-byte echoed header; reject short, zero or unrelated replies.
+
+| Query / write | ARG | Payload | Purpose |
+| --- | --- | --- | --- |
+| 82 / none | 1 | 6 | Full model signature; must match the table before configuration |
+| 84 / 04 | 0 | 128 | Lighting configuration, marker at payload offsets 126–127 |
+| 8A / 0A | 0 | 512 | Effect colour palette; seven RGB slots per effect |
+| 86 / 06 | 0 | 384 | Custom RGB planes, 126 bytes per channel plus preserved padding |
+
+Config payload offset 9 selects preset (0) or custom (1); offset 10 selects
+effect (0 off, 1–18 OEM effects, 21 custom). K673 effect parameters occupy
+pairs beginning at offset 58: brightness, then `(speed << 4) | colour-slot`.
+The device table explicitly records each effect's offset and capabilities.
+Slot 0 is user RGB; slots 1–6 are presets and slot 7 is rainbow. Palette RGB
+begins at `effect * 21 + colour-slot * 3`.
+
+Every write reads the complete existing block first, changes only the requested
+fields and preserves the rest. The config marker and full model signature are
+mandatory. Palette is saved before config; after a 60ms settle delay the driver
+reads the block back and compares it, returning an error on mismatch. No default
+block is written after a failed read. No firmware or bootloader commands exist.
+
+Custom colours use the OEM matrix slot, not Brahma's row order: channel bytes
+are `slot`, `126+slot`, `252+slot`. UI `off` is `slot*3` for compatibility with the
+existing colour editor. All requested offsets must exist in this model's table.
+Key remapping, macros, Bluetooth/receiver transport and profile switching are
+not implemented for this protocol; those controls are unavailable for K673.
+
+### Local validation
+
+Run the normal Rust tests without hardware. The ignored
+`sinowealth::tests::hardware_read_only` test opens the attached model and reads
+its settings/custom colour buffer without changing any settings. Hardware
+validation additionally requires applying a small brightness/colour change in
+the app, observing the keyboard, and reading/reopening the app to confirm it.
+Keep `Support::Reported` until the owner confirms the physical result.
+
+On 2026-10-25 the owner confirmed that both brightness and colour changes work
+on the physical K673SP-RGB-PRO, on Ubuntu 24.04.5 / X11. The Rust driver also
+passed a non-root hardware round trip: brightness 4 -> 3 was read back from the
+keyboard, then the complete original config was restored and compared. The
+384-byte custom-colour buffer was successfully read; per-key writes/layout have
+not yet been visually confirmed. `Support::Verified` records the owner's
+brightness/colour confirmation, not a claim that every effect or key was tested.
+
+### Idle behaviour
+
+Device discovery for this protocol performs an active model query. Repeating
+that query every four seconds was reported to interrupt the K673's lighting
+(blinking). The app therefore discovers devices at startup and when the user
+presses **Atualizar dispositivos**; it has no background device polling timer.
+Settings are loaded when a connected keyboard is selected or its profile changes,
+and after an explicit Apply. Write verification remains part of that action.
+
+The owner confirmed on 2026-10-25 (Ubuntu 24.04.5 / X11) that leaving HIDra
+open and idle after this change no longer causes periodic keyboard blinking.
+
+### Notification streaming (Linux)
+
+The K673 OEM lighting stream uses command `08`, ARG 0, payload length 378.
+Its RGB bytes are interleaved by matrix slot (`off = slot*3`), unlike the saved
+command `06` colour planes. Only keys in the model table are accepted. To enter
+streaming, preserve the captured 128-byte config and apply the table's patches:
+offset 9 = 1, 10 = 21, 59 = 0x47. Wait 400ms for the firmware's mode repaint
+before sending a black frame. Keep sending the current volatile frame every
+350ms, including the selected background when no alert is active; the firmware does not retain
+this stream indefinitely. No model queries, configuration reads, reconnects or
+persistent colour writes occur per frame. Manual controls are gated while owned.
+
+The original mode config is saved atomically before activation, restored and
+verified on Off/normal exit, and retained for recovery after errors or interruption.
+The saved command `06` per-key colour table is never modified by notifications.
+A command `06` restoration in the first experimental stream test returned a
+feature-report protocol error; production notification code therefore uses only
+volatile `08` frames and mode configuration `04`, and never rewrites that table.
+The owner confirmed Q illuminated cyan in both direct streaming tests on
+2026-10-25; the second test also successfully verified the entry config on restore.
+The owner subsequently confirmed the integrated UI, On/Off flow and a real CLI
+notification matching a text filter worked on the same keyboard/desktop.
+
+Desktop events are monitored on a private session D-Bus connection using
+`org.freedesktop.DBus.Monitoring.BecomeMonitor`, restricted to FDO `Notify` and
+GTK `AddNotification`. Portal-forwarded notifications arrive at these final
+endpoints too. The monitor never takes ownership of the notification service.
+Rules match case-insensitive app substrings and optional title/body substrings;
+a blank app accepts all browsers. Notification contents remain in a bounded RAM
+history, while rules and the enabled preference are stored in the app config
+directory. On mode restore failure the recovery file and exclusive gate remain
+so manual writes cannot overwrite the pending original configuration.
+
+Notification rendering now fills every supported physical key with the user's
+background RGB, then overlays active alerts in arrival order. Optional blinking
+alternates alert/background every 700ms while retaining the 350ms volatile
+keepalive cadence. Neither background nor blinking changes the saved colour table.
+An expired/cleared alert reveals the previous overlapping alert or background.
+
+Durations are 0 (until desktop dismissal), 60, 300 or 600 seconds. Legacy durations
+1–59 migrate to 0; tests run for 10 seconds and Clear alerts affects only HIDra.
+FDO Notify calls are correlated by caller unique name + serial with the server's
+method return, producing the real notification ID. Ignore GNOME's forwarded Notify
+copy; its shell and public proxy share IDs. Observe NotificationClosed from both
+(the proxy may no longer forward to a client that exited). Track every notification
+separately and replace its previous alerts when its ID is updated. GTK Add/Remove
+uses (app ID, notification ID), but user dismissal has no standard GTK signal;
+manual clearing/fixed durations remain available. A public notification daemon
+restart ends monitoring with an explicit retry error rather than reusing stale IDs.
+No notification-centre history is imported or persisted.
+
+## K673SP-RGB-PRO 2.4 GHz receiver
+
+The OEM PRO-MAX KB.ini lists receiver `3554:FA09` alongside wired `258A:010C`.
+The local receiver exposes vendor usage FF02, usage 2, interface 1, input/output
+report 0x13 (20 bytes including ID). Its FF04 report 6 is a seven-byte status
+feature, not the wired 520-byte settings channel. The keyboard model is checked
+through command 05; the measured reply is
+`13 05 01 00 0a 03 00 00 00 00 ba 00 00 10 00 00 00 00 00 f0`.
+
+Read-only local queries on 2026-10-26 returned ten pages / 128 bytes for command
+44 and 35 pages / 490 bytes for command 49. The config has its own link fields
+(including byte 14) and ends in 5A A5. Never use a wired template or pad the RF
+palette to 512. All block writes preserve the block read from this transport,
+change requested lighting bytes only, then require exact read-back. Logical
+wired config 04 maps to RF 04, palette 0A maps to RF 09. Persistent per-key
+transfers have not been established and remain unavailable over RF.
+
+RF reports contain ID, command, total pages, page index, length, up to fourteen
+payload bytes and an eight-bit sum of bytes 0..18 at byte 19. Only command 88
+biases the length by 0x10. Its volatile payload groups RGB, key count and OEM
+matrix indices. W (slot 14) was confirmed to light blue with these packets.
+Read-only local diagnostics also observed missing entire replies and partial
+blocks (33 or 34 of 35 palette pages), even without any settings writes. Each
+query therefore gets at most ten attempts, with a fresh page set per attempt,
+a 1.5-second response window, and a 400ms idle limit after a partial response.
+Checksums, page consistency and exact block length remain mandatory. Verification also has a ten-attempt budget. An incomplete or missing read-back
+retries only the query. A complete read-back that differs from the requested
+lighting block allows resending that same full block, with exact read-back still
+required for success. Persistent pages are paced at 60ms and acknowledgements
+are drained between pages; verification starts after 250ms.
+This recovery runs only during requested device operations, not idle polling.
+
+Volatile messages are paced at 20ms per report. A full logical frame is encoded
+as colour groups in ONE command-88 message, fragmented into 14-byte HID chunks.
+There is no 80-key split: 81 equal-colour keys need 85 bytes / seven chunks.
+Oversized messages are rejected before any part is sent. The previous 84-byte
+split produced a final single-key message containing Right Ctrl on this layout;
+the owner observed whole-board flashes followed by only Right Ctrl remaining.
+Treating messages as replacement frames on this firmware is an inference from
+that observation, not an established fact about other Compx models. The
+owner confirmed that the single-message form lights the full keyboard, but
+intermittent simultaneous LED blanking remains unresolved. A subsequent 60-second
+passive USB capture while Smart was enabled contained 904 outgoing reports,
+all command 88, with no configuration queries or persistent writes. The owner
+did not observe the fault during that capture, so it does not establish its cause.
+RF remains Reported/experimental rather than fully Verified.
+
+RF Smart activation waits 1.5s for the mode transition, then the worker sends the
+complete current frame on its existing 350ms keepalive cadence, including an
+unchanged background. The earlier three-second startup resend window produced
+visible flashes and then stopped refreshing the unchanged colours. Full-frame
+keepalives address both that expiry and lost volatile packets. They use the
+existing handle and command 88 only: no discovery, reads or saved-setting writes
+occur on idle ticks. These timings and the keepalive change require physical
+verification; they do not establish a measured reset duration. Smart settings/exit
+waits allow the longer RF retry budget to finish before reporting a timeout.
+
+Snapshots now include a receiver flag (old snapshots default to wired). Recovery
+never replays a snapshot through the opposite transport, even for the same
+model. A pending snapshot from the other transport is saved separately as
+`smart-lighting-recovery-usb.json` or `smart-lighting-recovery-rf.json` before
+the active backup slot is reused. Recovery defers that copy until the original
+connection is available; it does not block Smart mode on the current connection.
+Existing conflicting copies are preserved and reported rather than overwritten.
+Startup checks both deferred files as well as the active recovery file. Disable
+Smart mode before changing connection type. No bootloader,
+firmware, remap, reset, or generic raw-command interfaces are exposed.
+
+Cross-checks: [receiver protocol notes](https://github.com/SibteProf/keylux/blob/main/docs/PROTOCOL.md)
+and [Compx paged read/write implementation](https://github.com/dnviti/aula-x99-pro-driver-linux/blob/master/aula_f99pro.py).
+
+## Host RGB calibration
+
+Keyboard Settings exposes optional per-model channel gains, disabled by default.
+The owner supplied K673SP white target is 255/153/161, stored only in devices.rs.
+Profiles in keyboard-calibration.json are keyed by the complete model identity,
+so this model shares a preference across cable and RF. A channel is transmitted
+as round(input * calibrated_white / 255), with each white channel in 1..255.
+This is white balance, not a measured gamma or gamut correction.
+
+Transform only requested solid-colour palette slots, requested saved per-key
+cells, and composed volatile notification frames. Notification rules/backgrounds
+remain logical RGB; active streams pick up profile changes on their next tick.
+Mode blocks, identity bytes, untouched palette entries and recovery snapshots
+remain raw and never pass through calibration. Manual colour read-back uses the
+inverse gain (rounded/clamped) to avoid applying compensation twice after Refresh.
+Rainbow/firmware-generated colours are not corrected. After a calibration change,
+manual Lighting/per-key colours require Apply again; no automatic flash writes
+are made by the calibration setting itself.
+
+## Smart system monitoring
+
+Optional CPU/RAM/root-filesystem meters persist independently of draft rules.
+They are sampled read-only about once per second only while Smart owns lighting.
+Linux CPU usage uses deltas of the aggregate /proc/stat counters (first eight
+columns; idle+iowait treated as idle, guest columns not counted twice). The first
+CPU sample establishes a baseline. RAM uses (MemTotal-MemAvailable)/MemTotal.
+Definitions follow the [kernel proc documentation](https://docs.kernel.org/filesystems/proc.html).
+Disk uses statvfs("/"): used/(used+available-to-user), matching df's usable-space
+percentage. It measures space, not I/O activity; other mount points are not read.
+
+A model's three ten-key rows live only in devices.rs. K673SP uses Q–P, A–;,
+and Z–/. Each rounded percentage selects a position: 0–4% leaves background,
+5–15% selects the first, 16–25% the second, through 96–100% the tenth. Raw usage
+strictly above 90% blinks the indicator with 700ms phases on the existing frame
+tick. Each meter persists an optional bar flag (old preferences default false).
+Single mode colours just the selected position; bar mode colours positions zero
+through that position, inclusive. The same blink gate covers the entire bar.
+Composition is background < monitoring < notifications; alerts own their keys
+through their own off phase. Calibration runs after composition. Sampling errors
+show per-meter errors and leave that meter at background, never stale values.
+No new HID queries, mode changes, scripts or saved-colour writes occur on samples.
+Meter switches/colours save immediately without clearing alerts or saving draft
+rules. Disabling Smart stops sampling; its next activation takes fresh samples.
+
+## Passive RF fault capture
+
+scripts/capture-rf-lighting.py takes VID/PID/interface arguments rather than a
+model-specific device table. It observes usbmon only, retaining a 120-second
+ring of report-13 vendor traffic, associated OUT completions, vendor-interface
+IN transfer errors and receiver presence/address changes. Records include kernel
+microsecond timestamps and URB IDs for fragment timing/correlation. Ctrl+C writes
+the ring to an exclusive, owner-readable /tmp JSONL file and appends a precise
+stop marker for comparison with the owner's observed fault. No device writes
+are performed. Successful boot/NKRO/media payloads are not retained. This cannot
+establish over-air delivery; a clean USB capture alone does not prove that the
+keyboard received a complete radio message.

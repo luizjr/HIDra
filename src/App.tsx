@@ -1,3 +1,4 @@
+import { useTranslation } from "./i18n";
 import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import type {
@@ -17,6 +18,8 @@ import {
 } from "./backend";
 import { useLocalStorage, useUpdater } from "./hooks";
 import { ToastProvider, useToast } from "./components/Toast";
+import { useSmartNotifications } from "./useSmartNotifications";
+import { CloseToTray } from "./components/CloseToTray";
 import { Sidebar } from "./components/Sidebar";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { SegmentedControl } from "./components/ui/SegmentedControl";
@@ -36,7 +39,9 @@ const EMPTY_DEVICES: ListDevices = {
 };
 
 function AppShell() {
+  const { t } = useTranslation();
   const notify = useToast();
+  const smart = useSmartNotifications();
 
   const [devices, setDevices] = useState<ListDevices>(EMPTY_DEVICES);
   const [selected, setSelected] = useLocalStorage<DeviceKind>("hidra.device", "mouse");
@@ -81,25 +86,34 @@ function AppShell() {
     [devices.keyboard, notify, setProfile],
   );
 
+  const caps = devices.keyboard_capabilities;
+  const keyboardProfile: Profile = caps?.profiles === 1 ? 1 : profile;
+  const smartReady = smart.view !== null;
+  const lightingLocked = smart.view?.active ?? false;
+
   // Initial load: devices + keyboard effect catalogue.
   useEffect(() => {
     refreshDevices();
+  }, [refreshDevices]);
+
+  useEffect(() => {
+    if (!devices.keyboard) return;
     keyboardEffects()
       .then(setEffects)
       .catch((e: unknown) => notify(String(e), "error"));
-  }, [refreshDevices, notify]);
+  }, [devices.keyboard_model, devices.keyboard, notify]);
 
   // Load the selected device's state when device/profile changes.
   useEffect(() => {
     if (selected === "mouse") loadMouse();
-    else loadKeyboard(profile);
-  }, [selected, profile, loadMouse, loadKeyboard]);
+    else {
+      setKeyboardState(null);
+      if (devices.keyboard && smartReady && !lightingLocked) loadKeyboard(keyboardProfile);
+    }
+  }, [selected, keyboardProfile, devices.keyboard_model, devices.keyboard, smartReady, lightingLocked, loadMouse, loadKeyboard]);
 
-  // Poll list_devices every 4s to keep the connection dots fresh.
-  useEffect(() => {
-    const id = setInterval(refreshDevices, 4000);
-    return () => clearInterval(id);
-  }, [refreshDevices]);
+  // Device discovery sends a model query on some keyboards. Keep it explicit:
+  // polling can interrupt their lighting even when no setting is being changed.
 
   const updater = useUpdater();
 
@@ -109,8 +123,10 @@ function AppShell() {
 
   return (
     <div className="app">
+      <CloseToTray />
       <Sidebar
         devices={devices}
+        lightingLocked={smart.view?.active ?? false}
         version={updater.version}
         checking={updater.state.kind === "checking"}
         onCheckUpdates={() => void updater.check(true)}
@@ -133,36 +149,44 @@ function AppShell() {
             value={selected}
             onChange={setSelected}
             options={[
-              { value: "mouse", label: "Mouse" },
-              { value: "keyboard", label: "Teclado" },
+              { value: "mouse", label: t("Mouse") },
+              { value: "keyboard", label: t("Teclado") },
             ]}
           />
+          <button
+            type="button"
+            className="btn"
+            onClick={refreshDevices}
+            title={t("Procurar dispositivos após conectar ou desconectar o cabo/dongle")}
+          >
+            {t("Atualizar dispositivos")}</button>
           <div className="topbar__status">
             <span className={`led${devices.mouse ? " led--on" : ""}`} />
-            Mouse
-            <span className={`led${devices.keyboard ? " led--on" : ""}`} />
-            Teclado
-          </div>
+            {t("Mouse")}<span className={`led${devices.keyboard ? " led--on" : ""}`} />
+            {t("Teclado")}</div>
         </header>
 
         {selected === "mouse" ? (
           <MousePanel
             state={mouseState}
-            name={devices.mouse_model ?? "Mouse"}
+            name={devices.mouse_model ?? t("Mouse")}
             present={devices.mouse}
             applied={mouseApplied}
             onApplied={loadMouse}
           />
         ) : (
           <KeyboardPanel
+            key={devices.keyboard_model ?? "none"}
             state={keyboardState}
-            name={devices.keyboard_model ?? "Teclado"}
+            smart={smart}
+            capabilities={caps}
+            name={devices.keyboard_model ?? t("Teclado")}
             effects={effects}
             present={devices.keyboard}
-            profile={profile}
+            profile={keyboardProfile}
             onProfile={selectProfile}
             applied="Aplicado"
-            onApplied={() => loadKeyboard(profile)}
+            onApplied={() => loadKeyboard(keyboardProfile)}
           />
         )}
       </main>

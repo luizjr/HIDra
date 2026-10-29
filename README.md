@@ -31,6 +31,8 @@ of operating system.
 > Not affiliated with, endorsed by, or sponsored by any hardware manufacturer.
 > Product names are used only to say which hardware is supported.
 
+Custom Wheel Phase 1 adds device-scoped wheel preferences and an OSD preview for supported registry entries. Input interception and remapping are deferred to Phase 2. See [Custom Wheel](docs/CUSTOM-WHEEL.md).
+
 ## Screenshots
 
 | Mouse | Keyboard |
@@ -49,6 +51,8 @@ Per-key colours, painted key by key and stored on the keyboard itself:
 | Redragon Cobra Pro (M711-PRO) — 2.4 GHz receiver | `25A7:FA07` | ✅ verified | lighting, DPI, buttons, polling |
 | Redragon Cobra Pro (M711-PRO) — cable | `25A7:FA08` | ✅ verified | lighting, DPI, buttons, polling |
 | Redragon Brahma Pro (K586RGB-PRO) | `0C45:5004` | ✅ verified | 18 effects + per-key colour, 3 profiles, key remap |
+| Redragon UCAL K673SP-RGB-PRO — cable | `258A:010C` | ✅ verified | wired lighting, 18 effects + per-key colour (model identity checked); no remap/profiles |
+| Redragon UCAL K673SP-RGB-PRO — 2.4 GHz receiver | `3554:FA09` | 🟡 reported | 2.4 GHz lighting + Smart Notifications (model identity checked); saved per-key colours require USB |
 <!-- devices:end -->
 
 **Your device is not here?** HIDra is not a Redragon project — it started with
@@ -67,6 +71,101 @@ The full walkthrough is [docs/ADDING-DEVICES.md](docs/ADDING-DEVICES.md)
 code, open a
 [device request](https://github.com/luizjr/HIDra/issues/new?template=device-request.yml)
 with the output of `python3 scripts/probe-device.py --issue`.
+
+## Smart Notifications (Linux)
+
+On the wired UCAL K673SP-RGB-PRO, open **Smart Notifications** beside **Per-key
+colours**. Add a rule, select keys on the keyboard, choose a colour, optional blinking and duration,
+and save. Match an application (for example Viber), title/description text, or
+both. Leave Application empty to match website notification text from any
+browser. Select **Notification source → Gmail (Browser)** to match
+`mail.google.com` automatically in the notification title or description, from
+any browser. This does not filter by the mail sender. For custom rules,
+**Use description** copies the third field from a recent notification.
+The browser or application must actually send a desktop notification.
+
+Turn the switch on to let notifications control the lighting. Other lighting
+effects cannot run simultaneously. Choose a solid **Background colour** and save
+it with the rules to keep the other keys lit. Switching off or closing HIDra restores
+the captured lighting mode. The switch and rules survive restarts. HIDra must
+remain running to receive notifications. Recent notification content stays in
+memory and is never saved. **Test rule** checks the selected lighting assignment.
+
+New rules default to **Until notification is dismissed**. This follows desktop
+notification removal, not whether a message has been read inside its app. The
+other choices keep an alert for **1, 5 or 10 minutes**. Notification keys can
+blink between their alert colour and the background. Each notification is tracked
+separately, including updates/replacements, so dismissing one does not clear
+another notification on the same key. **Clear alerts** clears keyboard alerts
+without dismissing desktop notifications. **Test rule** runs for ten seconds.
+
+FDO notifications use the server's returned ID and `NotificationClosed` signal.
+On Ubuntu/GNOME this keeps alerts active after a banner hides if the notification
+remains in the notification centre. GTK applications are tracked by app and
+notification ID; app-requested removal is observed, but GTK provides no standard
+user-dismissal signal. If an app does not report removal, use **Clear alerts** or
+a fixed duration. Only notifications arriving while Smart mode is listening are
+tracked; existing notification history is not imported on startup. Existing rules
+with second-based durations migrate to the new dismissal default.
+
+Custom scripts are another **Notification source**. Enter the absolute path to
+an executable script (with a shebang) and an interval of 5–86400 seconds. While
+Smart mode is on, the script runs immediately and again after the selected delay
+following completion. Exit code **1** triggers the assigned keys; **0** clears
+that script's alert. The default duration is **Until script returns 0**. Other
+exit codes, launch errors and the 10-second timeout show a status error and
+preserve the last alert state. Runs never overlap for the same rule, use no
+terminal and discard stdout/stderr. Off, rule changes and app exit stop running
+scripts. Use the script file for arguments or environment setup. **Test rule**
+previews lighting only; it does not execute the script.
+
+The in-app **Custom colour** palette offers a saturation/brightness plane, hue,
+saturation and brightness sliders, RGB channels and direct HEX entry.
+
+HIDra also has a top bar/system tray icon with **Show HIDra** and **Exit HIDra**.
+When Smart Notifications is enabled, closing the window asks whether to **Keep
+in top bar**, **Exit HIDra**, or **Cancel**. Keeping it in the top bar hides the
+window while notification monitoring and scripts keep running; use the icon's
+menu to reopen the same window. Exiting stops monitoring/scripts and restores
+the previous lighting. With Smart Notifications off, closing exits normally.
+If the desktop has no active tray host, the background option is unavailable
+so the window cannot be hidden without a way to reopen it. GNOME requires an
+enabled AppIndicator extension (Ubuntu includes Ubuntu AppIndicators).
+
+The listener uses the session D-Bus notification service without root or replacing
+your notification daemon. If the session disallows monitoring, the panel displays
+an error. Smart mode uses temporary RGB frames and keeps one HID handle open;
+its idle background frame needs periodic refreshes, without repeated device discovery
+or configuration reads. Other devices/platforms currently show this mode as
+unsupported.
+
+The UCAL K673SP-RGB-PRO also has a distinct **2.4 GHz** receiver (`3554:FA09`).
+HIDra checks its full model identity and uses its own output-report protocol;
+adding that ID to the wired transport would not work. Smart Notifications streams
+key colours over RF as complete frames, including periodic background refreshes.
+Saved per-key colour editing still requires the cable. Wired and receiver mode
+recovery snapshots cannot be restored through the other transport. Turn Smart
+Notifications off before switching between cable and RF. Wake a sleeping wireless
+keyboard with a key press and use Refresh devices if needed.
+RF support remains experimental: intermittent simultaneous LED blanking has
+been reported and is still under investigation.
+
+### Settings and login startup
+
+The sidebar **Settings** button contains Language and **Start HIDra automatically
+when I sign in**. On Linux, enabling it registers this executable in the user's
+XDG autostart directory with `--tray`; disabling removes that entry. It takes
+effect at the next desktop login and needs no root or background service.
+Smart Notifications keeps its own On/Off preference and resumes only if enabled.
+AppImages register their original AppImage path rather than the temporary mount.
+Keep the executable at the registered path, or disable/re-enable after moving it.
+
+`hidra --tray` (alias `--tray-mode`) starts without showing the main window;
+launching without that argument shows it normally. No window is flashed before
+hiding. If the tray host is unavailable at login, HIDra waits briefly for it and
+then shows the window as a fallback. Use the tray menu's **Show HIDra** to open it.
+Automatic startup is unavailable in development-server builds; use a standalone
+build so startup does not depend on Vite running.
 
 ## Install
 
@@ -219,9 +318,10 @@ The keyboard protocol was reverse-engineered by capturing the official Windows
 tool's USB traffic; every byte of it is written down in
 [`PROTOCOL.md`](PROTOCOL.md) so nobody has to do that work twice.
 
-> The app's own interface is currently in Portuguese. Translating it is a
-> well-scoped first contribution — all user-facing strings live in the React
-> components under `src/`.
+The interface defaults to **English**. Choose **English** or **Português (Brasil)**
+from **Language** at the bottom of the sidebar; the choice is saved locally.
+Switching languages keeps your current edits and does not query or write to
+connected devices. See [docs/TRANSLATING.md](docs/TRANSLATING.md) to add a language.
 
 ## Contributing
 
@@ -248,3 +348,48 @@ device.
 
 [GPL-3.0-or-later](LICENSE). Use at your own risk: every panel has a
 **restore defaults** button, and nothing here can be flashed to firmware.
+
+### Keyboard colour calibration
+
+The keyboard **Settings** tab offers optional RGB white balance for supported
+models. Enable it and enter the RGB values that look white on your keyboard;
+logical white (255/255/255) is mapped to those values and other chosen colours
+are scaled proportionally. K673SP starts with the owner's suggested 255/153/161,
+with correction off by default. USB and RF share the model's saved preference.
+Smart Notifications updates on its next frame; reapply manual Lighting/per-key
+colours after changing calibration. Built-in rainbow colours are not corrected.
+
+### System monitoring in Smart Notifications
+
+Enable CPU, RAM and/or **Disk space (/)** with a separate colour for each meter.
+The K673SP uses Q–P (CPU), A–; (RAM), and Z–/ (disk). Choose **Single key**
+(the default) or **Bar** separately for each meter. Bar lights every key from
+the start of the row through the current position (50% CPU: Q/W/E/R/T). The
+first key represents 5–15%, the second 16–25%, through 96–100% at the last key;
+below 5% the row stays at its background. Above 90% the active key or whole
+filled bar blinks.
+Disk means used space on the root filesystem. Live Linux readings update about
+once per second while Smart is on; notifications take priority on overlapping
+keys, and RGB calibration applies to the monitoring colours too.
+
+### Capturing intermittent RF lighting faults (Linux)
+
+Run `sudo python3 scripts/capture-rf-lighting.py --vid 3554 --pid fa09 --interface 1`
+from the repository. Leave HIDra running normally and press Ctrl+C immediately
+when the fault appears. The helper prints a `/tmp/hidra-rf-*.jsonl` path containing
+the last 120 seconds and a stop marker. It passively records vendor report 0x13,
+transfer completions/errors and receiver disconnect/reconnect events; it does not
+send HID commands or retain typed-key reports. This observes the USB channel to
+the receiver, not the over-air radio link. The file is owned by the invoking user.
+
+### On-Screen Display (OSD)
+
+Global **Settings → On-Screen Display (OSD)** controls short, passive overlays.
+The reusable overlay works while the main window is hidden in the tray, without
+opening it or taking focus. Configure enable/disable, duration, text size, width,
+height, position and edge margin; **Preview OSD** saves and uses the actual overlay.
+Each message appears on the pointer's monitor, constrained to that monitor's
+work area and scale. A new message replaces the previous one and restarts its
+expiry; no input daemon, GNOME extension or external OSD program is involved.
+This phase provides only the service and preview, with no wheel/remap consumers.
+See [the OSD API and implementation notes](docs/OSD.md).

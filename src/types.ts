@@ -9,6 +9,8 @@ export type MouseMode = "2.4g" | "wired";
 
 export interface ListDevices {
   keyboard: boolean;
+  keyboard_mode?: MouseMode | null;
+  keyboard_capabilities?: KeyboardCapabilities | null;
   mouse: boolean;
   mouse_mode: MouseMode | null;
   /** What was found, from the backend device table. */
@@ -103,4 +105,78 @@ export interface CustomCell {
   r: number;
   g: number;
   b: number;
+}
+
+/** Supported controls and geometry supplied by the selected device's driver. */
+export interface KeyboardCapabilities {
+  profiles: number;
+  remap: boolean;
+  per_key: boolean;
+  smart_notifications?: boolean;
+  custom_wheel?: CustomWheelCapability | null;
+  brightness_max: number;
+  speed_min: number;
+  speed_max: number;
+  custom_effect: number;
+  layout_aspect: number | null;
+  layout: import("./keyboardLayout").KeyCell[] | null;
+}
+
+export interface NotificationRule {
+  id: string;
+  name: string;
+  enabled: boolean;
+  app: string;
+  text: string;
+  keys: number[];
+  color: Rgb;
+  duration_seconds: number;
+  blinking: boolean;
+  source: "notification" | "script";
+  script_path: string;
+  interval_seconds: number;
+}
+export interface MonitoringMeter { enabled: boolean; color: Rgb; bar: boolean }
+export interface MonitoringSettings { cpu: MonitoringMeter; ram: MonitoringMeter; disk: MonitoringMeter }
+export const DEFAULT_MONITORING: MonitoringSettings = {
+  cpu: { enabled: false, color: [0, 190, 255], bar: false },
+  ram: { enabled: false, color: [150, 80, 255], bar: false },
+  disk: { enabled: false, color: [255, 140, 0], bar: false },
+};
+export interface SystemReading { percent: number | null; error: string | null }
+export interface SystemMetrics { cpu: SystemReading; ram: SystemReading; disk: SystemReading }
+export interface SmartSettings { enabled: boolean; rules: NotificationRule[]; background: Rgb; monitoring: MonitoringSettings }
+export interface SmartView {
+  settings: SmartSettings;
+  active: boolean;
+  status: string;
+  error: string | null;
+  recent: { app: string; title: string; body: string; matched: boolean }[];
+  lit_keys: number[];
+  scripts: { id: string; running: boolean; last_exit: number | null; error: string | null }[];
+  metrics: SystemMetrics;
+}
+
+export interface CustomWheelCapability {
+  settings_key: string;
+  input: {
+    vendor_id: number;
+    product_id: number;
+    name: string | null;
+    bus_type: number | null;
+    required_capabilities: { event_type: number; code: number }[];
+    clockwise_keycode: number;
+    counterclockwise_keycode: number;
+    press_keycode: number;
+  };
+}
+export type WheelMode = "volume" | "brightness" | "zoom";
+export interface CustomWheelPreferences {
+  enabled: boolean;
+  modes: WheelMode[];
+  show_osd: boolean;
+}
+export interface CustomWheelView {
+  preferences: CustomWheelPreferences;
+  error: string | null;
 }

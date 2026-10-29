@@ -2,6 +2,7 @@
 // real Rust backend via `invoke` or, when running in a plain browser, a MOCK
 // layer so `npm run build` and browser preview work without hardware.
 
+import { DEFAULT_MONITORING } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 import { KEYBOARD_EFFECTS_FALLBACK } from "./constants";
 import type {
@@ -18,6 +19,9 @@ import type {
   RemapKey,
   RemapKind,
   Rgb,
+  SmartSettings,
+  MonitoringSettings,
+  SmartView,
 } from "./types";
 
 declare global {
@@ -120,9 +124,74 @@ function log(cmd: string, args?: Record<string, unknown>): void {
   console.info(`[mock] ${cmd}`, args ?? {});
 }
 
+
+const mockSmart: SmartView = { settings: { enabled: false, rules: [], background: [24, 24, 32], monitoring: structuredCloneSafe(DEFAULT_MONITORING) }, active: false,
+  status: "off", error: null, recent: [], lit_keys: [], scripts: [], metrics: { cpu: { percent: null, error: null }, ram: { percent: null, error: null }, disk: { percent: null, error: null } } };
+try {
+  const saved = JSON.parse(localStorage.getItem("hidra.smartNotifications.preview") ?? "null") as SmartSettings | null;
+  if (saved && typeof saved.enabled === "boolean" && Array.isArray(saved.rules)) {
+    mockSmart.settings = { ...saved, background: saved.background ?? [24, 24, 32], monitoring: saved.monitoring ?? structuredCloneSafe(DEFAULT_MONITORING),
+      rules: saved.rules.map((rule) => ({ ...rule, blinking: rule.blinking ?? false, source: rule.source ?? "notification", script_path: rule.script_path ?? "", interval_seconds: rule.interval_seconds ?? 30,
+        duration_seconds: [0, 60, 300, 600].includes(rule.duration_seconds) ? rule.duration_seconds : 0 })) };
+    mockSmart.active = saved.enabled;
+    mockSmart.status = saved.enabled ? "listening" : "off";
+  }
+} catch { /* Preview preferences are optional. */ }
+
+let mockCalibration = { profile: { enabled: false, white: [255, 153, 161] as Rgb }, suggested_white: [255, 153, 161] as Rgb, error: null };
+try {
+  const profile = JSON.parse(localStorage.getItem("hidra.calibration.preview") ?? "null");
+  if (profile && typeof profile.enabled === "boolean" && Array.isArray(profile.white) && profile.white.length === 3 && profile.white.every((v: unknown) => Number.isInteger(v) && Number(v) >= 1 && Number(v) <= 255)) mockCalibration.profile = profile;
+} catch { /* Optional preview settings. */ }
+
 function mockBackend<T>(cmd: string, args?: Record<string, unknown>): T {
   const a = (args ?? {}) as Record<string, unknown>;
   switch (cmd) {
+    case "keyboard_calibration_get":
+      return structuredCloneSafe(mockCalibration) as T;
+    case "keyboard_calibration_save": {
+      mockCalibration = { ...mockCalibration, profile: structuredCloneSafe(a.profile as typeof mockCalibration.profile) };
+      try { localStorage.setItem("hidra.calibration.preview", JSON.stringify(mockCalibration.profile)); } catch { /* optional */ }
+      return structuredCloneSafe(mockCalibration) as T;
+    }
+    case "smart_notifications_get":
+      return structuredCloneSafe(mockSmart) as T;
+    case "smart_notifications_save": {
+      mockSmart.settings = structuredCloneSafe(a.settings as SmartSettings);
+      mockSmart.active = mockSmart.settings.enabled;
+      mockSmart.status = mockSmart.active ? "listening" : "off";
+      mockSmart.lit_keys = [];
+      try { localStorage.setItem("hidra.smartNotifications.preview", JSON.stringify(mockSmart.settings)); } catch { /* optional */ }
+      return structuredCloneSafe(mockSmart) as T;
+    }
+    case "smart_notifications_background": {
+      mockSmart.settings.background = structuredCloneSafe(a.color as Rgb);
+      try { localStorage.setItem("hidra.smartNotifications.preview", JSON.stringify(mockSmart.settings)); } catch { /* optional */ }
+      return structuredCloneSafe(mockSmart) as T;
+    }
+    case "smart_notifications_monitoring": {
+      mockSmart.settings.monitoring = structuredCloneSafe(a.monitoring as MonitoringSettings);
+      try { localStorage.setItem("hidra.smartNotifications.preview", JSON.stringify(mockSmart.settings)); } catch { /* optional */ }
+      return structuredCloneSafe(mockSmart) as T;
+    }
+    case "smart_notifications_clear": {
+      mockSmart.lit_keys = [];
+      return structuredCloneSafe(mockSmart) as T;
+    }
+    case "smart_notifications_test": {
+      if (!mockSmart.active) throw new Error("Turn on Smart Notifications before testing a rule");
+      const rule = mockSmart.settings.rules.find((rule) => rule.id === a.id);
+      if (!rule) throw new Error("Save the rule before testing it");
+      mockSmart.lit_keys = [...rule.keys];
+      mockSmart.recent.unshift({ app: "HIDra preview", title: rule.name, body: "Test notification", matched: true });
+      mockSmart.recent = mockSmart.recent.slice(0, 12);
+      setTimeout(() => {
+        mockSmart.lit_keys = [];
+        window.dispatchEvent(new CustomEvent("smart-notifications-mock", { detail: structuredCloneSafe(mockSmart) }));
+      }, 10_000);
+      return structuredCloneSafe(mockSmart) as T;
+    }
+
     case "list_devices":
       return { ...mockDevices } as T;
 
